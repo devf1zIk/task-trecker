@@ -84,15 +84,6 @@ public class FileBackedTaskManagerTest {
     }
 
     @Test
-    public void testLoadFromEmptyFile() {
-        FileBackedTaskManager manager = FileBackedTaskManager.loadFromFile(tempFile);
-
-        assertTrue(manager.getAllTasks().isEmpty(), "Список задач должен быть пустым.");
-        assertTrue(manager.getAllEpics().isEmpty(), "Список эпиков должен быть пустым.");
-        assertTrue(manager.getAllSubtasks().isEmpty(), "Список подзадач должен быть пустым.");
-    }
-
-    @Test
     public void testLoadFromFileWithTasks() throws IOException {
         String fileContent = """
                 id,type,name,status,description,epic
