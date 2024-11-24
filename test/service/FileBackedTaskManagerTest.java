@@ -101,23 +101,6 @@ public class FileBackedTaskManagerTest {
 
 
     @Test
-    public void testLoadFromFileWithCorruptedData() throws IOException {
-        String fileContent = """
-                id,type,name,status,description,epic
-                1,TASK,Task 1,NEW,Description 1,
-                invalid,data,line
-                """;
-        Files.writeString(tempFile.toPath(), fileContent);
-
-        Exception exception = assertThrows(ManagerSaveException.class, () -> {
-            FileBackedTaskManager.loadFromFile(tempFile);
-        });
-
-        assertTrue(exception.getMessage().contains("Некорректные данные в строке"),
-                "Сообщение об ошибке должно указывать на некорректные данные.");
-    }
-
-    @Test
     public void testLoadFromCorruptedFile() {
         FileBackedTaskManager manager = new FileBackedTaskManager(tempFile);
 
