@@ -29,6 +29,8 @@ public interface TaskManager {
 
     void updateEpic(Epic epic);
 
+    void updateStatus(Epic epic);
+
     void updateSubtask(SubTask subtask);
 
     void removeTask(int id);

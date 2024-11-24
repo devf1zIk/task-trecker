@@ -117,7 +117,8 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-    private void updateStatus(Epic epic) {
+    @Override
+    public void updateStatus(Epic epic) {
         List<SubTask> subTasks = new ArrayList<>();
         for (Integer subTaskId : epic.getSubTasks()) {
             SubTask subTask = subtasks.get(subTaskId);
@@ -151,9 +152,11 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
+
     @Override
     public void removeTask(int id) {
         tasks.remove(id);
+        historyManager.remove(id);
     }
 
     @Override
@@ -162,9 +165,12 @@ public class InMemoryTaskManager implements TaskManager {
         if (epic != null) {
             for (Integer subtaskId : epic.getSubTasks()) {
                 subtasks.remove(subtaskId);
+                historyManager.remove(subtaskId);
             }
         }
+        historyManager.remove(id);
     }
+
 
     @Override
     public void removeSubtask(int id) {
@@ -180,17 +186,32 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteAllTasks() {
+        for (Integer taskId : tasks.keySet()) {
+            historyManager.remove(taskId);
+        }
         tasks.clear();
     }
 
     @Override
     public void deleteAllEpics() {
+        for (Integer epicId : epics.keySet()) {
+            Epic epic = epics.get(epicId);
+            if (epic != null) {
+                for (Integer subtaskId : epic.getSubTasks()) {
+                    historyManager.remove(subtaskId);
+                }
+            }
+            historyManager.remove(epicId);
+        }
         epics.clear();
         subtasks.clear();
     }
 
     @Override
     public void deleteAllSubtasks() {
+        for (Integer subtaskId : subtasks.keySet()) {
+            historyManager.remove(subtaskId);
+        }
         subtasks.clear();
         for (Epic epic : epics.values()) {
             epic.clearSubTasks();
@@ -218,5 +239,6 @@ public class InMemoryTaskManager implements TaskManager {
         }
         return new ArrayList<>();
     }
+
 
 }
