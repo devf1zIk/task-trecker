@@ -52,7 +52,6 @@ public class InMemoryTaskManagerTest {
         assertNotNull(retrievedSubtask, "Подзадача должна быть получена.");
         assertEquals(subtask, retrievedSubtask, "Подзадача должна быть получена правильно.");
 
-        // Check if subtask is linked to the epic
         assertTrue(epic.getSubTasks().contains(subtask.getId()), "Подзадача должна быть связана с эпиком.");
     }
 

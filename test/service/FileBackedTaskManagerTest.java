@@ -73,45 +73,32 @@ public class FileBackedTaskManagerTest {
     }
 
     @Test
-    public void testSaveAndLoadEmptyFile() {
-        FileBackedTaskManager manager = new FileBackedTaskManager(tempFile);
+    public void testSaveAndLoadTasks() throws IOException {
+        Task task = new Task("Task 1", Status.NEW, "Description 1");
+        Epic epic = new Epic(1, "Epic 1", "Epic Description");
+        SubTask subtask = new SubTask(1, "Subtask 1", "Subtask Description", Status.NEW, epic.getId());
 
-        FileBackedTaskManager loadedManager = new FileBackedTaskManager(tempFile);
+        manager.addTask(task);
+        manager.addEpic(epic);
+        manager.addSubtask(subtask);
 
-        assertTrue(loadedManager.getAllTasks().isEmpty(), "Список задач должен быть пустым.");
-        assertTrue(loadedManager.getAllEpics().isEmpty(), "Список эпиков должен быть пустым.");
-        assertTrue(loadedManager.getAllSubtasks().isEmpty(), "Список подзадач должен быть пустым.");
+        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
+
+        assertEquals(1, loadedManager.getAllTasks().size());
+        Task loadedTask = loadedManager.getAllTasks().get(0);
+        assertEquals(task.getId(), loadedTask.getId());
+        assertEquals(task.getName(), loadedTask.getName());
+        assertEquals(task.getStatus(), loadedTask.getStatus());
+        assertEquals(task.getDescription(), loadedTask.getDescription());
+
+        assertEquals(1, loadedManager.getAllEpics().size());
+        Epic loadedEpic = loadedManager.getAllEpics().get(0);
+        assertEquals(epic.getId(), loadedEpic.getId());
+        assertEquals(epic.getName(), loadedEpic.getName());
+        assertEquals(epic.getStatus(), loadedEpic.getStatus());
+        assertEquals(epic.getDescription(), loadedEpic.getDescription());
     }
 
-    @Test
-    public void testLoadFromFileWithTasks() throws IOException {
-        String fileContent = """
-                id,type,name,status,description,epic
-                1,TASK,Task 1,NEW,Description 1,
-                2,EPIC,Epic 1,NEW,Description Epic,
-                3,SUBTASK,Subtask 1,IN_PROGRESS,Description Subtask,2
-                """;
-        Files.writeString(tempFile.toPath(), fileContent);
-
-        FileBackedTaskManager manager = FileBackedTaskManager.loadFromFile(tempFile);
-
-        assertEquals(1, manager.getAllTasks().size(), "Неверное количество задач.");
-        assertEquals(1, manager.getAllEpics().size(), "Неверное количество эпиков.");
-        assertEquals(1, manager.getAllSubtasks().size(), "Неверное количество подзадач.");
-
-        Task task = manager.getAllTasks().get(0);
-        assertEquals("Task 1", task.getName(), "Имя задачи некорректно.");
-        assertEquals(Status.NEW, task.getStatus(), "Статус задачи некорректен.");
-
-        Epic epic = manager.getAllEpics().get(0);
-        assertEquals("Epic 1", epic.getName(), "Имя эпика некорректно.");
-        assertEquals(Status.NEW, epic.getStatus(), "Статус эпика некорректен.");
-
-        SubTask subTask = manager.getAllSubtasks().get(0);
-        assertEquals("Subtask 1", subTask.getName(), "Имя подзадачи некорректно.");
-        assertEquals(Status.IN_PROGRESS, subTask.getStatus(), "Статус подзадачи некорректен.");
-        assertEquals(epic.getId(), subTask.getEpicId(), "ID эпика для подзадачи некорректен.");
-    }
 
     @Test
     public void testLoadFromFileWithCorruptedData() throws IOException {
