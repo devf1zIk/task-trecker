@@ -161,8 +161,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
                 String[] fields = line.split(",");
                 Task task = manager.fromCSV(fields);
-                maxId = Math.max(maxId, task.getId());
-
                 if (task instanceof Epic) {
                     manager.epics.put(task.getId(), (Epic) task);
                 } else if (task instanceof SubTask) {
@@ -173,17 +171,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             }
         } catch (IOException e) {
             throw new ManagerSaveException("Ошибка при загрузке из файла", e);
-        }
-
-        for (SubTask subTask : manager.subtasks.values()) {
-            Epic epic = manager.epics.get(subTask.getEpicId());
-            if (epic != null) {
-                epic.addSubTask(subTask.getId());
-            }
-        }
-
-        for (Epic epic : manager.epics.values()) {
-            manager.updateStatus(epic);
         }
 
         manager.id = maxId + 1;
