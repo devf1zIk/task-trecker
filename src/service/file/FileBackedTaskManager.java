@@ -141,11 +141,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
         switch (type) {
             case TASK:
-                return new Task(id,name, description, status);
+                return new Task(id, name, description, status);
             case EPIC:
                 return new Epic(id, name, description);
             case SUBTASK:
-                return new SubTask(id,name, description,status,epicId);
+                return new SubTask(id, name, description, status, epicId);
             default:
                 throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
         }
@@ -154,29 +154,21 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     public static FileBackedTaskManager loadFromFile(File file) {
         FileBackedTaskManager manager = new FileBackedTaskManager(file);
         int maxId = 0;
-
         try {
             List<String> lines = Files.readAllLines(file.toPath());
-            if (lines.size() > 1) {
-                for (String line : lines.subList(1, lines.size())) {
-                    if (line.isBlank()) {
-                        continue;
-                    }
-                    try {
-                        String[] fields = line.split(",");
-                        Task task = manager.fromCSV(fields);
-                        maxId = Math.max(maxId, task.getId());
+            for (String line : lines.subList(1, lines.size())) {
+                if (line.isBlank()) continue;
 
-                        if (task instanceof Epic) {
-                            manager.epics.put(task.getId(), (Epic) task);
-                        } else if (task instanceof SubTask) {
-                            manager.subtasks.put(task.getId(), (SubTask) task);
-                        } else {
-                            manager.tasks.put(task.getId(), task);
-                        }
-                    } catch (IllegalArgumentException e) {
-                        throw new ManagerSaveException("Некорректные данные в строке: " + line, e);
-                    }
+                String[] fields = line.split(",");
+                Task task = manager.fromCSV(fields);
+                maxId = Math.max(maxId, task.getId());
+
+                if (task instanceof Epic) {
+                    manager.epics.put(task.getId(), (Epic) task);
+                } else if (task instanceof SubTask) {
+                    manager.subtasks.put(task.getId(), (SubTask) task);
+                } else {
+                    manager.tasks.put(task.getId(), task);
                 }
             }
         } catch (IOException e) {
@@ -197,5 +189,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         manager.id = maxId + 1;
         return manager;
     }
+
 
 }
