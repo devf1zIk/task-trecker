@@ -5,7 +5,7 @@ import model.enums.Status;
 public class SubTask extends Task {
     private int epicId;
 
-    public SubTask(String name, String description, Status status){
+    public SubTask(String name, String description, Status status) {
         super(name, description, status);
     }
 
