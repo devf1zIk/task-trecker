@@ -8,7 +8,7 @@ public class Task {
     protected Status status;
     protected String description;
 
-    public Task(String name, Status status, String description) {
+    public Task(String name, String description,Status status) {
         this.name = name;
         this.status = status;
         this.description = description;

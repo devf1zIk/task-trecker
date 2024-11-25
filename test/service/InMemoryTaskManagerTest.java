@@ -22,7 +22,7 @@ public class InMemoryTaskManagerTest {
 
     @Test
     public void addTaskTest() {
-        Task task = new Task("Задача 1",Status.NEW, "Task 1");
+        Task task = new Task("Задача 1","Zadacha 1", Status.NEW);
         taskManager.addTask(task);
 
         Task retrievedTask = taskManager.getTask(task.getId());
@@ -45,7 +45,7 @@ public class InMemoryTaskManagerTest {
         Epic epic = new Epic(1,"Эпик 1", "Описание эпика 1");
         taskManager.addEpic(epic);
 
-        SubTask subtask = new SubTask("Подзадача 1", "Описание подзадачи 1",epic.getId());
+        SubTask subtask = new SubTask("Подзадача 1", "Описание подзадачи 1",Status.NEW,epic.getId());
         taskManager.addSubtask(subtask);
 
         SubTask retrievedSubtask = taskManager.getSubtask(subtask.getId());
@@ -57,7 +57,7 @@ public class InMemoryTaskManagerTest {
 
     @Test
     public void testTaskUpdate() {
-        Task task = new Task("Задача 1", Status.NEW,"Описание задачи 1");
+        Task task = new Task("Задача 1", "zadachs1", Status.NEW);
         taskManager.addTask(task);
 
         Task updatedTask = new Task(task.getId(), "Обновленная задача", "Обновленное описание", Status.IN_PROGRESS);
@@ -83,7 +83,7 @@ public class InMemoryTaskManagerTest {
 
     @Test
     public void testRemoveTask() {
-        Task task = new Task("Задача 1", Status.NEW,"Описание задачи 1");
+        Task task = new Task("Задача 1", "Zdacha 1", Status.NEW);
         taskManager.addTask(task);
 
         taskManager.removeTask(task.getId());
@@ -96,7 +96,7 @@ public class InMemoryTaskManagerTest {
         Epic epic = new Epic(3,"Эпик 1", "Описание эпика 1");
         taskManager.addEpic(epic);
 
-        SubTask subtask = new SubTask("Подзадача 1", "Описание Подзадачи 1",epic.getId());
+        SubTask subtask = new SubTask("Подзадача 1", "Описание Подзадачи 1", Status.NEW);
         taskManager.addSubtask(subtask);
 
         taskManager.removeEpic(epic.getId());
@@ -110,7 +110,7 @@ public class InMemoryTaskManagerTest {
         Epic epic = new Epic(4,"Эпик 1", "Описание эпика 1");
         taskManager.addEpic(epic);
 
-        SubTask subtask = new SubTask("Подзадача 1", "Описание Подзадачи 1", epic.getId());
+        SubTask subtask = new SubTask("Подзадача 1", "Описание Подзадачи 1", Status.NEW);
         taskManager.addSubtask(subtask);
 
         taskManager.removeSubtask(subtask.getId());
@@ -123,7 +123,7 @@ public class InMemoryTaskManagerTest {
         Epic epic = new Epic(5,"Эпик 1", "Описание эпика 1");
         taskManager.addEpic(epic);
 
-        SubTask subtask = new SubTask("Подзадача 1", "Описание Подзадачи 1", epic.getId());
+        SubTask subtask = new SubTask("Подзадача 1", "Описание Подзадачи 1",Status.NEW);
         taskManager.addSubtask(subtask);
 
         taskManager.removeSubtask(subtask.getId());
@@ -133,7 +133,7 @@ public class InMemoryTaskManagerTest {
 
     @Test
     public void testUpdateTaskUpdatesManagerData() {
-        Task task = new Task("Задача 1", Status.NEW, "test1");
+        Task task = new Task("Задача 1", "zadacha1", Status.NEW);
         taskManager.addTask(task);
 
         task.setName("Измененная задача");
