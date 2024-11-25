@@ -93,7 +93,8 @@ public class FileBackedTaskManagerTest {
     void shouldSaveAndLoadMultipleEntities() {
         Task task = new Task(1, "Task 1", "Description 1", Status.NEW);
         Epic epic = new Epic(2, "Epic 1", "Epic Description");
-        SubTask subTask = new SubTask(1,"SubTask 1", "SubTask Description", Status.DONE, epic.getId());
+        SubTask subTask = new SubTask(1, "SubTask 1", "SubTask Description", Status.DONE, epic.getId());
+
         manager.addTask(task);
         manager.addEpic(epic);
         manager.addSubtask(subTask);
@@ -102,12 +103,26 @@ public class FileBackedTaskManagerTest {
 
         assertEquals(1, loadedManager.getAllTasks().size());
         assertEquals(task, loadedManager.getTask(1));
+        assertEquals(task.getId(), loadedManager.getTask(1).getId());
+        assertEquals(task.getName(), loadedManager.getTask(1).getName());
+        assertEquals(task.getDescription(), loadedManager.getTask(1).getDescription());
+        assertEquals(task.getStatus(), loadedManager.getTask(1).getStatus());
 
         assertEquals(1, loadedManager.getAllEpics().size());
         assertEquals(epic, loadedManager.getEpic(2));
+        assertEquals(epic.getId(), loadedManager.getEpic(2).getId());
+        assertEquals(epic.getName(), loadedManager.getEpic(2).getName());
+        assertEquals(epic.getDescription(), loadedManager.getEpic(2).getDescription());
 
         assertEquals(1, loadedManager.getAllSubtasks().size());
         assertEquals(subTask, loadedManager.getSubtask(3));
+        assertEquals(subTask.getId(), loadedManager.getSubtask(3).getId());
+        assertEquals(subTask.getName(), loadedManager.getSubtask(3).getName());
+        assertEquals(subTask.getDescription(), loadedManager.getSubtask(3).getDescription());
+        assertEquals(subTask.getStatus(), loadedManager.getSubtask(3).getStatus());
+        assertEquals(subTask.getEpicId(), loadedManager.getSubtask(3).getEpicId());
+
     }
+
 }
 

@@ -153,18 +153,14 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         int maxId = 0;
         try {
             List<String> lines = Files.readAllLines(file.toPath());
-
             if (lines.isEmpty()) {
                 return manager;
             }
-
-            Task task;
             for (String line : lines.subList(1, lines.size())) {
                 if (line.isBlank()) continue;
-
                 try {
                     String[] fields = line.split(",");
-                    task = manager.fromCSV(fields);
+                    Task task = manager.fromCSV(fields);
 
                     if (task.getId() > maxId) {
                         maxId = task.getId();
@@ -175,9 +171,9 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     } else if (task instanceof SubTask) {
                         manager.subtasks.put(task.getId(), (SubTask) task);
                         Epic epic = manager.epics.get(((SubTask) task).getEpicId());
-                        manager.updateStatus(epic);
                         if (epic != null) {
                             epic.addSubTask(task.getId());
+                            manager.updateEpic(epic);
                         }
                     } else {
                         manager.tasks.put(task.getId(), task);
@@ -186,6 +182,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     throw new ManagerSaveException("Ошибка при разборе строки: " + line, e);
                 }
             }
+
         } catch (IOException e) {
             throw new ManagerSaveException("Ошибка при загрузке из файла: " + file.getName(), e);
         }
@@ -193,6 +190,5 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         manager.id = maxId + 1;
         return manager;
     }
-
 
 }

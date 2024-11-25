@@ -181,6 +181,7 @@ public class InMemoryTaskManager implements TaskManager {
                 epic.removeSubTask(id);
                 updateStatus(epic);
             }
+            historyManager.remove(id);
         }
     }
 
