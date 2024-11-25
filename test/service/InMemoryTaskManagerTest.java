@@ -44,7 +44,7 @@ public class InMemoryTaskManagerTest {
         Epic epic = new Epic(1,"Эпик 1", "Описание эпика 1");
         taskManager.addEpic(epic);
 
-        SubTask subtask = new SubTask("Подзадача 1", "Описание подзадачи 1",Status.NEW,epic.getId());
+        SubTask subtask = new SubTask(1,"Подзадача 1", "Описание подзадачи 1",Status.NEW,epic.getId());
         taskManager.addSubtask(subtask);
 
         SubTask retrievedSubtask = taskManager.getSubtask(subtask.getId());
@@ -95,7 +95,7 @@ public class InMemoryTaskManagerTest {
         Epic epic = new Epic(3,"Эпик 1", "Описание эпика 1");
         taskManager.addEpic(epic);
 
-        SubTask subtask = new SubTask("Подзадача 1", "Описание Подзадачи 1",Status.NEW,epic.getId());
+        SubTask subtask = new SubTask(1,"Подзадача 1", "Описание Подзадачи 1",Status.NEW,epic.getId());
         taskManager.addSubtask(subtask);
 
         taskManager.removeEpic(epic.getId());
@@ -109,7 +109,7 @@ public class InMemoryTaskManagerTest {
         Epic epic = new Epic(4,"Эпик 1", "Описание эпика 1");
         taskManager.addEpic(epic);
 
-        SubTask subtask = new SubTask("Подзадача 1", "Описание Подзадачи 1", Status.NEW,epic.getId());
+        SubTask subtask = new SubTask(1,"Подзадача 1", "Описание Подзадачи 1", Status.NEW,epic.getId());
         taskManager.addSubtask(subtask);
 
         taskManager.removeSubtask(subtask.getId());
@@ -122,7 +122,7 @@ public class InMemoryTaskManagerTest {
         Epic epic = new Epic(5,"Эпик 1", "Описание эпика 1");
         taskManager.addEpic(epic);
 
-        SubTask subtask = new SubTask("Подзадача 1", "Описание Подзадачи 1",Status.NEW, epic.getId());
+        SubTask subtask = new SubTask(1,"Подзадача 1", "Описание Подзадачи 1",Status.NEW, epic.getId());
         taskManager.addSubtask(subtask);
         taskManager.removeSubtask(subtask.getId());
         assertFalse(epic.getSubTasks().contains(subtask.getId()), "Эпик не должен содержать удаленную подзадачу.");

@@ -3,17 +3,13 @@ package model;
 import model.enums.Status;
 
 public class SubTask extends Task {
-    private int epicId;
+    private final int epicId;
 
-    public SubTask(String name, String description, Status status) {
-        super(name, description, status);
-    }
 
-    public SubTask(String name, String description, Status status, int epicId) {
-        super(name, description, status);
+    public SubTask(int id,String name, String description, Status status, int epicId) {
+        super(id,name, description, status);
         this.epicId = epicId;
     }
-
 
     public int getEpicId() {
         return epicId;

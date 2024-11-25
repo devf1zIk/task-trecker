@@ -1,143 +1,113 @@
 package service;
+import exception.ManagerSaveException;
 import model.Epic;
 import model.SubTask;
 import model.Task;
 import model.enums.Status;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import service.file.FileBackedTaskManager;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class FileBackedTaskManagerTest {
 
-    private FileBackedTaskManager taskManager;
+    private File tempFile;
+    private FileBackedTaskManager manager;
 
     @BeforeEach
-    public void setUp() {
-        taskManager = new FileBackedTaskManager(new File("tasks.csv"));
+    void setUp() throws IOException {
+        tempFile = File.createTempFile("tasks", ".csv");
+        manager = new FileBackedTaskManager(tempFile);
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (tempFile.exists()) {
+            tempFile.delete();
+        }
     }
 
     @Test
-    public void addTaskTest() {
-        Task task = new Task("Задача 1","Zadacha 1", Status.NEW);
-        taskManager.addTask(task);
+    void shouldSaveAndLoadTasksCorrectly() {
+        Task task = new Task(1, "Task 1", "Description 1", Status.NEW);
+        manager.addTask(task);
 
-        Task retrtask = taskManager.getTask(task.getId());
-        assertNotNull(retrtask, "Задача должна быть получена.");
-        assertEquals(task, retrtask, "Задача должна быть получена правильно.");
+        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
+
+        assertEquals(1, loadedManager.getAllTasks().size());
+        assertEquals(task, loadedManager.getTask(1));
     }
 
     @Test
-    public void addEpicTest() {
-        Epic epic = new Epic(1,"Эпик 1", "Описание эпика 1");
-        taskManager.addEpic(epic);
+    void shouldSaveAndLoadEpicsAndSubtasksCorrectly() {
+        Epic epic = new Epic(1, "Epic 1", "Epic Description");
+        SubTask subTask = new SubTask(2,"SubTask 1", "SubTask Description", Status.NEW,epic.getId());
+        manager.addEpic(epic);
+        manager.addSubtask(subTask);
 
-        Epic retrepic = taskManager.getEpic(epic.getId());
-        assertNotNull(retrepic, "Эпик должен быть получен.");
-        assertEquals(epic, retrepic, "Эпик должен быть получен правильно.");
+        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
+
+        assertEquals(1, loadedManager.getAllEpics().size());
+        assertEquals(epic, loadedManager.getEpic(1));
+
+        assertEquals(1, loadedManager.getAllSubtasks().size());
+        assertEquals(subTask, loadedManager.getSubtask(2));
+
+        assertTrue(loadedManager.getEpic(1).getSubTasks().contains(2));
     }
 
     @Test
-    public void addSubTaskTest() {
-        Epic epic = new Epic(1,"Эпик 1", "Описание эпика 1");
-        taskManager.addEpic(epic);
+    void shouldHandleEmptyFileCorrectly() throws IOException {
+        File tempFile = File.createTempFile("test", ".txt");
+        tempFile.deleteOnExit();
 
-        SubTask subtask = new SubTask("Подзадача 1", "Описание подзадачи 1",Status.NEW,epic.getId());
-        taskManager.addSubtask(subtask);
+        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
 
-        SubTask retrsub = taskManager.getSubtask(subtask.getId());
-        assertNotNull(retrsub, "Подзадача должна быть получена.");
-        assertEquals(subtask, retrsub, "Подзадача должна быть получена правильно.");
-
-        assertTrue(epic.getSubTasks().contains(subtask.getId()), "Подзадача должна быть связана с эпиком.");
+        assertTrue(loadedManager.getAllTasks().isEmpty());
+        assertTrue(loadedManager.getAllEpics().isEmpty());
+        assertTrue(loadedManager.getAllSubtasks().isEmpty());
     }
 
+
     @Test
-    public void testTaskUpdate() {
-        Task task = new Task("Задача 1", "zadachs1", Status.NEW);
-        taskManager.addTask(task);
+    void shouldThrowExceptionForCorruptedFile() throws IOException {
+        File tempFile = File.createTempFile("test", ".csv");
+        tempFile.deleteOnExit();
 
-        Task updatedTask = new Task(task.getId(), "Обновленная задача", "Обновленное описание", Status.IN_PROGRESS);
-        taskManager.updateTask(updatedTask);
+        Files.writeString(tempFile.toPath(), "id,type,name,status,description\n1,Task,Task 1,NEW,");
 
-        Task retrtask = taskManager.getTask(task.getId());
-        assertNotNull(retrtask, "Обновленная задача должна быть получена.");
-        assertEquals(updatedTask, retrtask, "Обновленная задача должна быть получена правильно.");
+        ManagerSaveException exception = assertThrows(ManagerSaveException.class, () -> {
+            FileBackedTaskManager.loadFromFile(tempFile);
+        });
+
+        assertTrue(exception.getMessage().contains("Ошибка при разборе строки"));
     }
 
-    @Test
-    public void testEpicUpdate() {
-        Epic epic = new Epic(2,"Эпик 1", "Описание эпика 1");
-        taskManager.addEpic(epic);
-
-        Epic updatedEpic = new Epic(epic.getId(), "Обновленный эпик", "Обновленное описание");
-        taskManager.updateEpic(updatedEpic);
-
-        Epic retrievedEpic = taskManager.getEpic(epic.getId());
-        assertNotNull(retrievedEpic, "Обновленный эпик должен быть получен.");
-        assertEquals(updatedEpic, retrievedEpic, "Обновленный эпик должен быть получен правильно.");
-    }
 
     @Test
-    public void testRemoveTask() {
-        Task task = new Task("Задача 1", "Zdacha 1", Status.NEW);
-        taskManager.addTask(task);
+    void shouldSaveAndLoadMultipleEntities() {
+        Task task = new Task(1, "Task 1", "Description 1", Status.NEW);
+        Epic epic = new Epic(2, "Epic 1", "Epic Description");
+        SubTask subTask = new SubTask(1,"SubTask 1", "SubTask Description", Status.DONE, epic.getId());
+        manager.addTask(task);
+        manager.addEpic(epic);
+        manager.addSubtask(subTask);
 
-        taskManager.removeTask(task.getId());
+        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
 
-        assertNull(taskManager.getTask(task.getId()), "Задача должна быть удалена.");
-    }
+        assertEquals(1, loadedManager.getAllTasks().size());
+        assertEquals(task, loadedManager.getTask(1));
 
-    @Test
-    public void testRemoveEpic() {
-        Epic epic = new Epic(3,"Эпик 1", "Описание эпика 1");
-        taskManager.addEpic(epic);
+        assertEquals(1, loadedManager.getAllEpics().size());
+        assertEquals(epic, loadedManager.getEpic(2));
 
-        SubTask subtask = new SubTask("Подзадача 1", "Описание Подзадачи 1", Status.NEW);
-        taskManager.addSubtask(subtask);
-
-        taskManager.removeEpic(epic.getId());
-
-        assertNull(taskManager.getEpic(epic.getId()), "Эпик должен быть удален.");
-        assertNull(taskManager.getSubtask(subtask.getId()), "Подзадача должна быть удалена.");
-    }
-
-    @Test
-    public void testRemoveSubtask() {
-        Epic epic = new Epic(4,"Эпик 1", "Описание эпика 1");
-        taskManager.addEpic(epic);
-
-        SubTask subtask = new SubTask("Подзадача 1", "Описание Подзадачи 1", Status.NEW);
-        taskManager.addSubtask(subtask);
-
-        taskManager.removeSubtask(subtask.getId());
-
-        assertNull(taskManager.getSubtask(subtask.getId()), "Подзадача должна быть удалена.");
-    }
-
-    @Test
-    public void testSubtaskIntegrityAfterRemoval() {
-        Epic epic = new Epic(5,"Эпик 1", "Описание эпика 1");
-        taskManager.addEpic(epic);
-
-        SubTask subtask = new SubTask("Подзадача 1", "Описание Подзадачи 1",Status.NEW);
-        taskManager.addSubtask(subtask);
-
-        taskManager.removeSubtask(subtask.getId());
-
-        assertFalse(epic.getSubTasks().contains(subtask.getId()), "Эпик не должен содержать удаленную подзадачу.");
-    }
-
-    @Test
-    public void testUpdateTaskUpdatesManager() {
-        Task task = new Task("Задача 1", "zadacha1", Status.NEW);
-        taskManager.addTask(task);
-
-        task.setName("Измененная задача");
-        taskManager.updateTask(task);
-
-        Task updatedTask = taskManager.getTask(task.getId());
-        assertEquals("Измененная задача", updatedTask.getName(), "Имя задачи должно быть обновлено.");
+        assertEquals(1, loadedManager.getAllSubtasks().size());
+        assertEquals(subTask, loadedManager.getSubtask(3));
     }
 }
+
