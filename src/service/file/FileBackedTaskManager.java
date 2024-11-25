@@ -156,15 +156,25 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         int maxId = 0;
         try {
             List<String> lines = Files.readAllLines(file.toPath());
+            Task task;
             for (String line : lines.subList(1, lines.size())) {
                 if (line.isBlank()) continue;
 
                 String[] fields = line.split(",");
-                Task task = manager.fromCSV(fields);
+                task = manager.fromCSV(fields);
+
+                if (task.getId() > maxId) {
+                    maxId = task.getId();
+                }
                 if (task instanceof Epic) {
                     manager.epics.put(task.getId(), (Epic) task);
                 } else if (task instanceof SubTask) {
                     manager.subtasks.put(task.getId(), (SubTask) task);
+                    Epic epic = manager.epics.get(((SubTask) task).getEpicId());
+                    manager.updateStatus(epic);
+                    if (epic != null) {
+                        epic.addSubTask(task.getId());
+                    }
                 } else {
                     manager.tasks.put(task.getId(), task);
                 }
@@ -176,6 +186,5 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         manager.id = maxId + 1;
         return manager;
     }
-
 
 }
