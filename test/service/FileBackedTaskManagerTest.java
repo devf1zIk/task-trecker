@@ -100,6 +100,21 @@ public class FileBackedTaskManagerTest {
         assertEquals(task.getName(), loadedManager.getTask(1).getName());
         assertEquals(task.getDescription(), loadedManager.getTask(1).getDescription());
         assertEquals(task.getStatus(), loadedManager.getTask(1).getStatus());
+
+        assertEquals(1, loadedManager.getAllEpics().size());
+        assertEquals(epic, loadedManager.getEpic(2));
+        assertEquals(epic.getId(), loadedManager.getEpic(2).getId());
+        assertEquals(epic.getName(), loadedManager.getEpic(2).getName());
+        assertEquals(epic.getDescription(), loadedManager.getEpic(2).getDescription());
+
+        assertEquals(1, loadedManager.getAllSubtasks().size());
+        assertEquals(subTask, loadedManager.getSubtask(3));
+        assertEquals(subTask.getId(), loadedManager.getSubtask(3).getId());
+        assertEquals(subTask.getName(), loadedManager.getSubtask(3).getName());
+        assertEquals(subTask.getDescription(), loadedManager.getSubtask(3).getDescription());
+        assertEquals(subTask.getStatus(), loadedManager.getSubtask(3).getStatus());
+        assertEquals(subTask.getEpicId(), loadedManager.getSubtask(3).getEpicId());
+
     }
 }
 
