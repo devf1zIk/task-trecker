@@ -27,9 +27,7 @@ public class FileBackedTaskManagerTest {
 
     @AfterEach
     void tearDown() {
-        if (tempFile.exists()) {
-            tempFile.delete();
-        }
+        tempFile.deleteOnExit();
     }
 
     @Test

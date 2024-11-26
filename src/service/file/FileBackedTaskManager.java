@@ -127,7 +127,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         );
     }
 
-
     private Task fromCSV(String[] fields) {
         int id = Integer.parseInt(fields[0]);
         TaskType type = TaskType.valueOf(fields[1].toUpperCase());
@@ -140,7 +139,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             case TASK:
                 return new Task(id, name, description, status);
             case EPIC:
-                return new Epic(id, name, description);
+                return new Epic(id, name, description,status);
             case SUBTASK:
                 return new SubTask(id,name, description, status,epicId);
             default:
