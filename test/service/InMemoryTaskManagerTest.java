@@ -6,7 +6,6 @@ import model.Task;
 import model.enums.Status;
 import org.junit.jupiter.api.BeforeEach;
 import java.time.Duration;
-import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
@@ -16,8 +15,7 @@ import java.util.List;
 public class InMemoryTaskManagerTest {
 
     private InMemoryTaskManager manager;
-    private Task task1;
-    private Task task2;
+    private Task task;
     private Epic epic;
     private SubTask subTask;
 
@@ -28,10 +26,10 @@ public class InMemoryTaskManagerTest {
 
     @Test
     void testAddTask() {
-        manager.addTask(task1);
+        manager.addTask(task);
         List<Task> tasks = manager.getAllTasks();
         assertEquals(1, tasks.size());
-        assertEquals(task1, tasks.get(0));
+        assertEquals(tasks, tasks.get(0));
     }
 
     @Test
@@ -55,11 +53,11 @@ public class InMemoryTaskManagerTest {
 
     @Test
     void testUpdateTask() {
-        manager.addTask(task1);
-        task1.setName("Updated Task 1");
-        manager.updateTask(task1);
+        manager.addTask(task);
+        task.setName("Updated Task 1");
+        manager.updateTask(task);
 
-        Task updatedTask = manager.getTask(task1.getId());
+        Task updatedTask = manager.getTask(task.getId());
         assertEquals("Updated Task 1", updatedTask.getName());
     }
 
@@ -87,8 +85,8 @@ public class InMemoryTaskManagerTest {
 
     @Test
     void testRemoveTask() {
-        manager.addTask(task1);
-        manager.removeTask(task1.getId());
+        manager.addTask(task);
+        manager.removeTask(task.getId());
 
         assertTrue(manager.getAllTasks().isEmpty());
     }
@@ -114,36 +112,36 @@ public class InMemoryTaskManagerTest {
 
     @Test
     void testHasOverlaps() {
-        manager.addTask(task1);
+        manager.addTask(task);
         Task overlappingTask = new Task(
                 "Overlapping Task",
                 "Description",
                 Status.NEW,
                 Duration.ofHours(1)
         );
-        overlappingTask.setStartTime(task1.getStartTime().plusHours(1));
+        overlappingTask.setStartTime(task.getStartTime().plusHours(1));
 
         assertTrue(manager.hasOverlaps(overlappingTask));
     }
 
     @Test
     void testGetHistory() {
-        manager.addTask(task1);
-        manager.getTask(task1.getId());
+        manager.addTask(task);
+        manager.getTask(task.getId());
 
         List<Task> history = manager.getHistory();
         assertEquals(1, history.size());
-        assertEquals(task1, history.get(0));
+        assertEquals(task, history.get(0));
     }
 
     @Test
     void testGetPriorityTasks() {
-        manager.addTask(task1);
-        manager.addTask(task2);
+        manager.addTask(task);
+        manager.addTask(task);
 
         List<Task> priorityTasks = manager.getPriorityTasks();
         assertEquals(2, priorityTasks.size());
-        assertEquals(task2, priorityTasks.get(0)); // Task with earlier time should come first
+        assertEquals(task, priorityTasks.get(0));
     }
 }
 
