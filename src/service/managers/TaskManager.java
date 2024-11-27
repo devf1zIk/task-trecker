@@ -49,4 +49,8 @@ public interface TaskManager {
 
     List<SubTask> getSubtasksOfEpic(int epicId);
 
+    List<Task> getPriorityTasks();
+
+    boolean hasOverlaps(Task task);
+
 }

@@ -12,6 +12,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
@@ -98,7 +100,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private void save() {
         try (Writer writer = new FileWriter(file)) {
-            writer.write("id,type,name,status,description,epic\n");
+            writer.write("id,type,name,status,description,epic,startTime,duration,endTime\n");
             for (Task task : getAllTasks()) {
                 writer.write(toCSV(task) + "\n");
             }
@@ -113,7 +115,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
     }
 
-
     private String toCSV(Task task) {
         String type = task instanceof Epic ? "EPIC" : (task instanceof SubTask ? "SUBTASK" : "TASK");
         String epicId = task instanceof SubTask ? String.valueOf(((SubTask) task).getEpicId()) : "";
@@ -123,29 +124,38 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 task.getName(),
                 task.getStatus().name(),
                 task.getDescription(),
+                task.getStartTime(),
+                task.getDuration(),
                 epicId
         );
     }
 
     private Task fromCSV(String[] fields) {
         int id = Integer.parseInt(fields[0]);
-        TaskType type = TaskType.valueOf(fields[1].toUpperCase());
+        TaskType type = TaskType.valueOf(fields[1]);
         String name = fields[2];
-        Status status = Status.valueOf(fields[3]);
-        String description = fields[4];
-        int epicId = fields.length > 5 ? Integer.parseInt(fields[5]) : -1;
+        String description = fields[3];
+        Status status = Status.valueOf(fields[4]);
+        Duration duration = Duration.parse(fields[5]);
+        LocalDateTime startTime = LocalDateTime.parse(fields[6]);
+        LocalDateTime endTime = fields[7].isBlank() ? null : LocalDateTime.parse(fields[7]); // Обрабатываем пустое поле
 
         switch (type) {
-            case TASK:
-                return new Task(id, name, description, status);
             case EPIC:
-                return new Epic(id, name, description,status);
+                return new Epic(id, name, description, status, duration, startTime);
             case SUBTASK:
-                return new SubTask(id,name, description, status,epicId);
+                int epicId = Integer.parseInt(fields[8]);
+                return new SubTask(id, name, description, status, duration, startTime, endTime, epicId);
+            case TASK:
+                return new Task(id, name, description, status, duration,startTime);
             default:
                 throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
         }
     }
+
+
+
+
 
     public static FileBackedTaskManager loadFromFile(File file) {
         FileBackedTaskManager manager = new FileBackedTaskManager(file);

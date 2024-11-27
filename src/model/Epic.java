@@ -1,19 +1,17 @@
 package model;
 
 import model.enums.Status;
-
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Epic extends Task {
     private final List<Integer> subTasksIds = new ArrayList<>();
 
-    public Epic(int id, String name, String description) {
-        super(id, name, description, Status.NEW);
-    }
-
-    public Epic(int id, String name, String description,Status status) {
-        super(id, name, description, status);
+    public Epic(int id, String name, String description, Status status, Duration duration, LocalDateTime startTime) {
+        super(id, name, description, status, duration,startTime);
+        this.endTime = startTime.plus(duration);
     }
 
     public List<Integer> getSubTasks() {
@@ -40,6 +38,9 @@ public class Epic extends Task {
                 ", description='" + getDescription() + '\'' +
                 ", status=" + getStatus() +
                 ", subTasksIds=" + subTasksIds +
+                ", startTime=" + endTime +
+                ", endTime=" + startTime +
+                ", duration=" + getDuration() +
                 '}';
     }
 }
