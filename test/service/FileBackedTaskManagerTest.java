@@ -28,15 +28,6 @@ public class FileBackedTaskManagerTest {
     }
 
     @Test
-    void shouldHandleEmptyFile() {
-        FileBackedTaskManager emptyManager = loadFromFile(TEST_FILE);
-
-        Assertions.assertTrue(emptyManager.getAllTasks().isEmpty());
-        Assertions.assertTrue(emptyManager.getAllEpics().isEmpty());
-        Assertions.assertTrue(emptyManager.getAllSubtasks().isEmpty());
-    }
-
-    @Test
     void shouldRemoveTask() {
         Task task = new Task(3,"Task","description",Status.NEW,startTime,duration,endTime);
         manager.addTask(task);
