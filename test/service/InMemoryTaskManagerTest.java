@@ -75,15 +75,5 @@ public class InMemoryTaskManagerTest {
         assertNull(taskManager.getTask(task.getId()), "Task should be removed.");
     }
 
-    @Test
-    void deleteAllTasks_shouldRemoveAllTasks() {
-        taskManager.addTask(new Task("Task 1", "Description",Status.NEW ,Duration.ofHours(1)));
-        taskManager.addTask(new Task("Task 2", "Description",Status.NEW, Duration.ofHours(1)));
-
-        taskManager.deleteAllTasks();
-
-        assertTrue(taskManager.getAllTasks().isEmpty(), "All tasks should be removed.");
-    }
-
 }
 

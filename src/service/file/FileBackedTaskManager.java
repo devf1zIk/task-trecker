@@ -99,7 +99,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private void save() {
         try (Writer writer = new FileWriter(file)) {
-            writer.write("id,type,name,status,description,epic,startTime,duration,endTime\n");
+            writer.write("id,type,name,description,status,epic,startTime,duration,endTime\n");
             for (Task task : getAllTasks()) {
                 writer.write(toCSV(task) + "\n");
             }
@@ -121,8 +121,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 task.getId(),
                 type,
                 task.getName(),
-                task.getStatus().name(),
                 task.getDescription(),
+                task.getStatus().name(),
                 task.getStartTime(),
                 task.getDuration(),
                 epicId
@@ -137,7 +137,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         Status status = Status.valueOf(fields[4]);
         Duration duration = Duration.parse(fields[5]);
         LocalDateTime startTime = LocalDateTime.parse(fields[6]);
-        LocalDateTime endTime = fields[7].isBlank() ? null : LocalDateTime.parse(fields[7]); // Обрабатываем пустое поле
+        LocalDateTime endTime = fields[7].isBlank() ? null : LocalDateTime.parse(fields[7]);
 
         switch (type) {
             case EPIC:
