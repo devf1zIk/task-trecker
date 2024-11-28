@@ -64,6 +64,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void addTask(Task task) {
         task.setId(++id);
+        checkTaskTime(task);
         if (hasOverlaps(task)) {
             throw new ValidationException("Task overlaps with an existing task.");
         }
@@ -82,22 +83,29 @@ public class InMemoryTaskManager implements TaskManager {
         Epic epic = epics.get(subtask.getEpicId());
         if (epic != null) {
             subtask.setId(++id);
+            if (hasOverlaps(subtask)) {
+                throw new ValidationException("Subtask overlaps with an existing task.");
+            }
+            prioritizedTasks.add(subtask);
             subtasks.put(subtask.getId(), subtask);
             epic.addSubTask(subtask.getId());
             updateStatus(epic);
         } else {
-            System.out.println("Epic with ID " + subtask.getEpicId() + " not found.");
+            throw new ValidationException("Epic with ID " + subtask.getEpicId() + " not found.");
         }
     }
 
     @Override
     public void updateTask(Task task) {
         if (tasks.containsKey(task.getId())) {
+            prioritizedTasks.remove(tasks.get(task.getId()));
+            if (hasOverlaps(task)) {
+                throw new ValidationException("Task overlaps with an existing task.");
+            }
             tasks.put(task.getId(), task);
-            checkTaskTime(task);
-            hasOverlaps(task);
+            prioritizedTasks.add(task);
         } else {
-            System.out.println("Task with ID " + task.getId() + " not found.");
+            throw new ValidationException("Task with ID " + task.getId() + " not found.");
         }
     }
 
@@ -118,8 +126,10 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void updateSubtask(SubTask subtask) {
         if (subtasks.containsKey(subtask.getId())) {
-            checkTaskTime(subtask);
-            prioritizedTasks.remove(subtask);
+            prioritizedTasks.remove(subtasks.get(subtask.getId()));
+            if (hasOverlaps(subtask)) {
+                throw new ValidationException("Subtask overlaps with an existing task.");
+            }
             subtasks.put(subtask.getId(), subtask);
             prioritizedTasks.add(subtask);
             Epic epic = epics.get(subtask.getEpicId());
@@ -127,7 +137,7 @@ public class InMemoryTaskManager implements TaskManager {
                 updateStatus(epic);
             }
         } else {
-            System.out.println("Subtask with ID " + subtask.getId() + " not found.");
+            throw new ValidationException("Subtask with ID " + subtask.getId() + " not found.");
         }
     }
 
@@ -269,9 +279,18 @@ public class InMemoryTaskManager implements TaskManager {
         LocalDateTime startTime = newTask.getStartTime();
         LocalDateTime endTime = startTime.plus(newTask.getDuration());
 
+        System.out.println("Checking overlaps for task " + newTask.getId() + ": " + startTime + " to " + endTime);
+
         return prioritizedTasks.stream()
-                .anyMatch(existingTask -> existingTask.getStartTime() != null && existingTask.getEndTime() != null &&
-                        startTime.isBefore(existingTask.getEndTime()) && endTime.isAfter(existingTask.getStartTime()));
+                .filter(existingTask -> existingTask.getId() != newTask.getId())
+                .anyMatch(existingTask -> {
+                    boolean overlap = existingTask.getStartTime() != null && existingTask.getEndTime() != null &&
+                            startTime.isBefore(existingTask.getEndTime()) && endTime.isAfter(existingTask.getStartTime());
+                    if (overlap) {
+                        System.out.println("Overlap found with task " + existingTask.getId());
+                    }
+                    return overlap;
+                });
     }
 
     private void checkTaskTime(Task task) {
@@ -285,6 +304,5 @@ public class InMemoryTaskManager implements TaskManager {
             throw new ValidationException("Task overlaps with an existing task.");
         }
     }
-
 
 }

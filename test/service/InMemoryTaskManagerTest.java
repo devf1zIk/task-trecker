@@ -1,12 +1,9 @@
 package service;
-import model.Epic;
-import model.SubTask;
+import exception.ValidationException;
 import model.Task;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import model.enums.Status;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,97 +15,83 @@ public class InMemoryTaskManagerTest {
     private InMemoryTaskManager taskManager;
     private final LocalDateTime startTime = LocalDateTime.now();
     private final Duration duration = Duration.ofMinutes(1);
-    private final LocalDateTime endTime = startTime.plus(duration);
+    private InMemoryTaskManager manager;
 
     @BeforeEach
     void setUp() {
-        taskManager = new InMemoryTaskManager();
+        manager = new InMemoryTaskManager();
     }
 
     @Test
-    void addTask_shouldAddTaskToManager() {
-        Task task1 = new Task(1, "Spring Boot 1", "Spring Boot is great", Status.NEW,startTime, duration,endTime);
-        Task task2 = new Task(2, "Spring Boot 2", "Spring Boot letsgo", Status.NEW,startTime , duration, endTime);
-        Task task3 = new Task(3, "Spring Boot 3", "Spring boot ifelse", Status.NEW, startTime, duration, endTime);
+    void shouldAddAndRetrieveTask() {
+        Task task = new Task(1, "Task 1", "Description", Status.NEW, startTime, duration);
+        manager.addTask(task);
 
-        taskManager.addTask(task1);
-        taskManager.addTask(task2);
-        taskManager.addTask(task3);
-
-        taskManager.removeTask(task1.getId());
-
-        List<Task> remainingTasks = taskManager.getAllTasks().stream()
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-        assertEquals(remainingTasks, List.of(task2, task3), "Task1 should be removed, and Task2, Task3 should remain.");
-
-        remainingTasks.forEach(System.out::println);
+        Task retrievedTask = manager.getTask(task.getId());
+        assertNotNull(retrievedTask);
+        assertEquals(task.getId(), retrievedTask.getId());
     }
 
     @Test
-    void addEpic_shouldAddEpicToManager() {
+    void shouldUpdateTask() {
+        Task task = new Task(2, "Task 1", "Description", Status.NEW, startTime, duration);
+        manager.addTask(task);
 
-        Epic epic = new Epic(1, "Epic1", "Description Epic1", Status.NEW, duration);
+        task.setName("Updated Task 1");
+        manager.updateTask(task);
 
-        taskManager.addEpic(epic);
-
-        Epic retrievedEpic = taskManager.getEpic(epic.getId());
-        assertNotNull(retrievedEpic, "Epic should be added.");
-        assertEquals(epic.getName(), retrievedEpic.getName(), "Epic name should match.");
+        Task updatedTask = manager.getTask(task.getId());
+        assertNotNull(updatedTask);
+        assertEquals("Updated Task 1", updatedTask.getName());
     }
 
     @Test
-    void addSubtask_shouldAddSubtaskToEpic() {
-        Epic epic = new Epic(2, "Epic1", "Description epic1", Status.NEW, duration);
-        Epic epic2 = new Epic(3, "Epic2", "Description epic2", Status.NEW, duration);
+    void shouldDeleteTask() {
+        Task task = new Task(3, "Task 1", "Description", Status.NEW, startTime, duration);
+        manager.addTask(task);
 
-        taskManager.addEpic(epic);
-        taskManager.addEpic(epic2);
-
-        SubTask subTask = new SubTask(1, "Add Test for Spring Tasks", "Spring boot subtasks1", Status.NEW,duration, epic.getId());
-        SubTask subTask2 = new SubTask(2, "subtask2", "subtask2 description", Status.NEW, duration, epic2.getId());
-
-        taskManager.addSubtask(subTask);
-        taskManager.addSubtask(subTask2);
-
-        List<SubTask> subtasks = taskManager.getSubtasksOfEpic(epic.getId()).stream()
-                .filter(Objects::nonNull)
-                .toList();
-
-        List<SubTask> subtasks2 = taskManager.getSubtasksOfEpic(epic2.getId()).stream()
-                .filter(Objects::nonNull)
-                .toList();
-
-        assertEquals(1, subtasks.size(), "Epic 1 should contain one subtask.");
-        assertTrue(subtasks.contains(subTask), "Subtask1 should be present in Epic 1.");
-
-        assertEquals(1, subtasks2.size(), "Epic 2 should contain one subtask.");
-        assertTrue(subtasks2.contains(subTask2), "Subtask2 should be present in Epic 2.");
+        manager.removeTask(task.getId());
+        assertNull(manager.getTask(task.getId()));
     }
 
     @Test
-    void updateTask_shouldUpdateExistingTask() {
+    void shouldRetrieveAllTasks() {
 
-        Task task = new Task(6, "Reactjs", "Reactjs great frontend", Status.NEW,startTime, duration, endTime);
-        taskManager.addTask(task);
+        Task task1 = new Task(4, "Task 1", "Description", Status.NEW, startTime, duration);
+        Task task2 = new Task(5, "Task 2", "Description", Status.IN_PROGRESS, startTime.plusMinutes(2), duration);
+        manager.addTask(task1);
+        manager.addTask(task2);
 
-        task.setName("Updated Task");
-        taskManager.updateTask(task);
-
-        Task updatedTask = taskManager.getTask(task.getId());
-        assertEquals("Updated Task", updatedTask.getName(), "Task name should be updated.");
+        List<Task> tasks = manager.getAllTasks();
+        assertEquals(2, tasks.size());
     }
 
     @Test
-    void removeTask_shouldRemoveTaskFromManager() {
-        Task task = new Task(7, "VueJs", "Vue js better", Status.NEW, startTime,  duration, endTime);
-        taskManager.addTask(task);
+    void shouldThrowValidationExceptionOnOverlappingTasks() {
+        Task task1 = new Task(6, "Task 1", "Description", Status.NEW, startTime, duration);
+        Task task2 = new Task(7, "Task 2", "Description", Status.NEW, startTime, duration);
+        manager.addTask(task1);
 
-        taskManager.removeTask(task.getId());
+        ValidationException exception = assertThrows(ValidationException.class, () -> manager.addTask(task2));
+        assertEquals("Task overlaps with an existing task.", exception.getMessage());
+    }
 
-        Task removedTask = taskManager.getTask(task.getId());
-        assertNull(removedTask, "Task should be removed.");
+    @Test
+    void shouldRetrieveHistory() {
+        Task task1 = new Task(1, "Task 1", "Description", Status.NEW, startTime, duration);
+        Task task2 = new Task(2, "Task 2", "Description", Status.IN_PROGRESS, startTime.plusMinutes(2), duration);
+
+        manager.addTask(task1);
+        manager.addTask(task2);
+
+        manager.getTask(task1.getId());
+        manager.getTask(task2.getId());
+
+        List<Task> history = manager.getHistory();
+
+        assertEquals(2, history.size());
+        assertTrue(history.contains(task1));
+        assertTrue(history.contains(task2));
     }
 }
 

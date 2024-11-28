@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
@@ -112,8 +114,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private String toCSV(Task task) {
         String type = task instanceof Epic ? "EPIC" : (task instanceof SubTask ? "SUBTASK" : "TASK");
-        String epicId = task instanceof SubTask ? String.valueOf(((SubTask) task).getEpicId()) : "";
-        return String.format("%d,%s,%s,%s,%s,%s",
+        String epicId = task instanceof SubTask ? String.valueOf(((SubTask) task).getEpicId()) : " ";
+        return String.format("%d,%s,%s,%s,%s,%s,%s,%s,%s",
                 task.getId(),
                 type,
                 task.getName(),
@@ -122,11 +124,14 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 task.getStartTime(),
                 task.getDuration(),
                 task.getEndTime(),
-                epicId
+                type.equals("SUBTASK") ? "," + epicId : ""
         );
     }
 
     private Task fromCSV(String[] fields) {
+        if (fields.length < 7) {
+            throw new ManagerSaveException("Недостаточное количество полей в строке CSV.", new Throwable("csv"));
+        }
 
         int id = Integer.parseInt(fields[0]);
         String type = fields[1];
@@ -134,15 +139,18 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         String description = fields[3];
         Status status = Status.valueOf(fields[4]);
         Duration duration = Duration.parse(fields[5]);
-
+        LocalDateTime startTime = LocalDateTime.parse(fields[6]);
         switch (type) {
             case "EPIC":
-                return new Epic(id, name, description, status, duration);
+                return new Epic(id, name, description, status, startTime, duration);
             case "SUBTASK":
-                int epicId = Integer.parseInt(fields[6]);
-                return new SubTask(id, name, description, status, duration, epicId);
+                if (fields.length < 8) {
+                    throw new ManagerSaveException("Для подзадачи требуется указать ID эпика.", new Throwable("Epic"));
+                }
+                int epicId = Integer.parseInt(fields[7]);
+                return new SubTask(id, name, description, status, startTime, duration, epicId);
             case "TASK":
-                return new Task(id, name, description, status,duration);
+                return new Task(id, name, description, status, startTime, duration);
             default:
                 throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
         }
@@ -185,6 +193,16 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
         manager.id = maxId + 1;
         return manager;
+    }
+
+    public List<SubTask> getEpicSubtasks(int epicId) {
+        List<SubTask> epicSubtasks = new ArrayList<>();
+        for (SubTask subtask : subtasks.values()) {
+            if (subtask.getEpicId() == epicId) {
+                epicSubtasks.add(subtask);
+            }
+        }
+        return epicSubtasks;
     }
 
 }
