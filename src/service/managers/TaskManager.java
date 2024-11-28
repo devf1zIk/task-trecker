@@ -1,9 +1,9 @@
 package service.managers;
-
 import model.Epic;
 import model.SubTask;
 import model.Task;
 import java.util.List;
+
 public interface TaskManager {
 
     List<Task> getAllTasks();
