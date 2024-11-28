@@ -5,7 +5,6 @@ import model.Epic;
 import model.SubTask;
 import model.Task;
 import model.enums.Status;
-import model.enums.TaskType;
 import service.managers.InMemoryTaskManager;
 import java.io.File;
 import java.io.FileWriter;
@@ -41,7 +40,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         super.addSubtask(subtask);
         save();
     }
-
 
     @Override
     public void updateTask(Task task) {
@@ -99,7 +97,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private void save() {
         try (Writer writer = new FileWriter(file)) {
-            writer.write("id,type,name,description,status,epic,startTime,duration,endTime\n");
+            writer.write("id,type,name,description,status,startTime,duration,endTime,epicId\n");
             for (Task task : getAllTasks()) {
                 writer.write(toCSV(task) + "\n");
             }
@@ -125,28 +123,28 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 task.getStatus().name(),
                 task.getStartTime(),
                 task.getDuration(),
+                task.getEndTime(),
                 epicId
         );
     }
 
     private Task fromCSV(String[] fields) {
+
         int id = Integer.parseInt(fields[0]);
-        TaskType type = TaskType.valueOf(fields[1]);
+        String type = fields[1];
         String name = fields[2];
         String description = fields[3];
         Status status = Status.valueOf(fields[4]);
         Duration duration = Duration.parse(fields[5]);
-        LocalDateTime startTime = LocalDateTime.parse(fields[6]);
-        LocalDateTime endTime = fields[7].isBlank() ? null : LocalDateTime.parse(fields[7]);
 
         switch (type) {
-            case EPIC:
+            case "EPIC":
                 return new Epic(id, name, description, status, duration);
-            case SUBTASK:
-                int epicId = Integer.parseInt(fields[8]);
+            case "SUBTASK":
+                int epicId = Integer.parseInt(fields[6]);
                 return new SubTask(id, name, description, status, duration, epicId);
-            case TASK:
-                return new Task(id, name, description, status, duration);
+            case "TASK":
+                return new Task(id, name, description, status,duration);
             default:
                 throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
         }

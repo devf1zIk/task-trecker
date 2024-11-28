@@ -64,9 +64,11 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void addTask(Task task) {
         task.setId(++id);
-        checkTaskTime(task);
-        tasks.put(task.getId(), task);
+        if (hasOverlaps(task)) {
+            throw new ValidationException("Task overlaps with an existing task.");
+        }
         prioritizedTasks.add(task);
+        tasks.put(task.getId(), task);
     }
 
     @Override
@@ -102,9 +104,12 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void updateEpic(Epic epic) {
         if (epics.containsKey(epic.getId())) {
+            checkTaskTime(epic);
+            prioritizedTasks.remove(epic);
             Epic savedEpic = epics.get(epic.getId());
             savedEpic.setName(epic.getName());
             savedEpic.setDescription(epic.getDescription());
+            prioritizedTasks.add(epic);
         } else {
             System.out.println("Epic with ID " + epic.getId() + " not found.");
         }
@@ -113,7 +118,10 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void updateSubtask(SubTask subtask) {
         if (subtasks.containsKey(subtask.getId())) {
+            checkTaskTime(subtask);
+            prioritizedTasks.remove(subtask);
             subtasks.put(subtask.getId(), subtask);
+            prioritizedTasks.add(subtask);
             Epic epic = epics.get(subtask.getEpicId());
             if (epic != null) {
                 updateStatus(epic);
@@ -125,6 +133,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void updateStatus(Epic epic) {
+
         List<SubTask> subTasks = getSubtasksOfEpic(epic.getId());
 
         if (subTasks.isEmpty()) {
@@ -216,7 +225,9 @@ public class InMemoryTaskManager implements TaskManager {
         for (Integer subtaskId : subtasks.keySet()) {
             historyManager.remove(subtaskId);
         }
+
         subtasks.clear();
+
         for (Epic epic : epics.values()) {
             epic.clearSubTasks();
             updateStatus(epic);
@@ -251,28 +262,29 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public boolean hasOverlaps(Task newTask) {
-        if (newTask.getStartTime() == null || newTask.getDuration().isZero()) return false;
+        if (newTask.getStartTime() == null || newTask.getDuration() == null || newTask.getDuration().isZero()) {
+            return false;
+        }
+
         LocalDateTime startTime = newTask.getStartTime();
-        LocalDateTime endTime = newTask.getEndTime();
+        LocalDateTime endTime = startTime.plus(newTask.getDuration());
 
         return prioritizedTasks.stream()
-                .filter(task -> task.getStartTime() != null)
-                .anyMatch(task -> {
-                    LocalDateTime existingStart = task.getStartTime();
-                    LocalDateTime existingEnd = task.getEndTime();
-                    return startTime.isBefore(existingEnd) && endTime.isAfter(existingStart);
-                });
+                .anyMatch(existingTask -> existingTask.getStartTime() != null && existingTask.getEndTime() != null &&
+                        startTime.isBefore(existingTask.getEndTime()) && endTime.isAfter(existingTask.getStartTime()));
     }
 
     private void checkTaskTime(Task task) {
         if (task.getStartTime() == null || task.getDuration().isZero()) return;
 
-        for (Task t : prioritizedTasks) {
-            if (t.getId() == task.getId()) continue;
-            if (t.getStartTime() != null && t.getEndTime().isAfter(task.getStartTime()) && t.getStartTime().isBefore(task.getEndTime())) {
-                throw new ValidationException("Task overlaps with an existing task.");
-            }
+        boolean hasOverlap = prioritizedTasks.stream()
+                .filter(t -> t.getId() != task.getId() && t.getStartTime() != null && t.getEndTime() != null)
+                .anyMatch(t -> t.getStartTime().isBefore(task.getEndTime()) && t.getEndTime().isAfter(task.getStartTime()));
+
+        if (hasOverlap) {
+            throw new ValidationException("Task overlaps with an existing task.");
         }
     }
+
 
 }

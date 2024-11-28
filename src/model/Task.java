@@ -19,17 +19,27 @@ public class Task {
         this.name = name;
         this.status = status;
         this.description = description;
-        this.duration = duration;
         this.startTime = LocalDateTime.now();
         this.endTime = startTime.plus(duration);
+        this.duration = duration;
     }
 
-    public Task(String name, String description, Status status, Duration duration) {
+    public Task(int id, String name,String description, Status status,LocalDateTime startTime,Duration duration,LocalDateTime endTime) {
+        this.id = id;
         this.name = name;
         this.status = status;
         this.description = description;
-        this.duration = duration;
         this.startTime = LocalDateTime.now();
+        this.duration = duration;
+        this.endTime = startTime.plus(duration);
+    }
+
+    public Task(String name, String description, Status status,LocalDateTime startTime, Duration duration) {
+        this.name = name;
+        this.status = status;
+        this.description = description;
+        this.startTime = LocalDateTime.now();
+        this.duration = duration;
         this.endTime = startTime.plus(duration);
     }
 
