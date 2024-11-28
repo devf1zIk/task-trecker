@@ -1,11 +1,11 @@
 package model;
 import model.enums.Status;
-
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Task {
+
     protected int id;
     protected String name;
     protected Status status;
@@ -14,7 +14,7 @@ public class Task {
     protected LocalDateTime startTime;
     protected LocalDateTime endTime;
 
-    public Task(int id, String name,String description, Status status,Duration duration,LocalDateTime startTime) {
+    public Task(int id, String name,String description, Status status,Duration duration) {
         this.id = id;
         this.name = name;
         this.status = status;

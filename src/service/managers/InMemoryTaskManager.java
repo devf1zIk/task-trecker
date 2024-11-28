@@ -66,7 +66,7 @@ public class InMemoryTaskManager implements TaskManager {
         task.setId(++id);
         checkTaskTime(task);
         tasks.put(task.getId(), task);
-        hasOverlaps(task);
+        prioritizedTasks.add(task);
     }
 
     @Override

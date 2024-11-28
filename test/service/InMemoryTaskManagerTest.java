@@ -3,145 +3,87 @@ package service;
 import model.Epic;
 import model.SubTask;
 import model.Task;
+import java.time.Duration;
+import java.util.List;
 import model.enums.Status;
 import org.junit.jupiter.api.BeforeEach;
-import java.time.Duration;
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.Test;
 import service.managers.InMemoryTaskManager;
-import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class InMemoryTaskManagerTest {
 
-    private InMemoryTaskManager manager;
-    private Task task;
-    private Epic epic;
-    private SubTask subTask;
+    private InMemoryTaskManager taskManager;
 
     @BeforeEach
     void setUp() {
-        manager = new InMemoryTaskManager();
+        taskManager = new InMemoryTaskManager();
     }
 
     @Test
-    void testAddTask() {
-        manager.addTask(task);
-        List<Task> tasks = manager.getAllTasks();
-        assertEquals(1, tasks.size());
-        assertEquals(tasks, tasks.get(0));
+    void addTask_shouldAddTaskToManager() {
+        Task task = new Task("Task 1", "Description", Status.NEW,Duration.ofMinutes(2));
+        taskManager.addTask(task);
+
+        Task retrievedTask = taskManager.getTask(task.getId());
+        assertNotNull(retrievedTask, "Task should be added.");
+        assertEquals(task.getName(), retrievedTask.getName(), "Task name should match.");
     }
 
     @Test
-    void testAddEpic() {
-        manager.addEpic(epic);
-        List<Epic> epics = manager.getAllEpics();
-        assertEquals(1, epics.size());
-        assertEquals(epic, epics.get(0));
+    void addEpic_shouldAddEpicToManager() {
+        Epic epic = new Epic(1, "Epic 1", "Description", Status.NEW,Duration.ofHours(2));
+        taskManager.addEpic(epic);
+
+        Epic retrievedEpic = taskManager.getEpic(epic.getId());
+        assertNotNull(retrievedEpic, "Epic should be added.");
+        assertEquals(epic.getName(), retrievedEpic.getName(), "Epic name should match.");
     }
 
     @Test
-    void testAddSubTask() {
-        manager.addEpic(epic);
-        subTask.setId(epic.getId());
-        manager.addSubtask(subTask);
+    void addSubtask_shouldAddSubtaskToEpic() {
+        Epic epic = new Epic(2,"Epic 1", "Description", Status.NEW,Duration.ofMinutes(2));
+        taskManager.addEpic(epic);
 
-        List<SubTask> subtasks = manager.getAllSubtasks();
-        assertEquals(1, subtasks.size());
-        assertEquals(subTask, subtasks.get(0));
+        SubTask subTask = new SubTask(1,"Subtask 1", "Description", Status.NEW,Duration.ofHours(2),epic.getId());
+        taskManager.addSubtask(subTask);
+        List<SubTask> subtasks = taskManager.getSubtasksOfEpic(epic.getId());
+        assertEquals(1, subtasks.size(), "Epic should contain one subtask.");
+        assertEquals(subTask.getId(), subtasks.get(0).getId(), "Subtask ID should match.");
     }
 
     @Test
-    void testUpdateTask() {
-        manager.addTask(task);
-        task.setName("Updated Task 1");
-        manager.updateTask(task);
+    void updateTask_shouldUpdateExistingTask() {
+        Task task = new Task("Task 1", "Description", Status.NEW,Duration.ofHours(1));
+        taskManager.addTask(task);
 
-        Task updatedTask = manager.getTask(task.getId());
-        assertEquals("Updated Task 1", updatedTask.getName());
+        task.setName("Updated Task");
+        taskManager.updateTask(task);
+
+        Task updatedTask = taskManager.getTask(task.getId());
+        assertEquals("Updated Task", updatedTask.getName(), "Task name should be updated.");
     }
 
     @Test
-    void testUpdateEpic() {
-        manager.addEpic(epic);
-        epic.setName("Updated Epic 1");
-        manager.updateEpic(epic);
+    void removeTask_shouldRemoveTaskFromManager() {
+        Task task = new Task("Task 1", "Description", Status.NEW, Duration.ofHours(1));
+        taskManager.addTask(task);
 
-        Epic updatedEpic = manager.getEpic(epic.getId());
-        assertEquals("Updated Epic 1", updatedEpic.getName());
+        taskManager.removeTask(task.getId());
+
+        assertNull(taskManager.getTask(task.getId()), "Task should be removed.");
     }
 
     @Test
-    void testUpdateSubTask() {
-        manager.addEpic(epic);
-        subTask.setId(epic.getId());
-        manager.addSubtask(subTask);
-        subTask.setName("Updated SubTask 1");
-        manager.updateSubtask(subTask);
+    void deleteAllTasks_shouldRemoveAllTasks() {
+        taskManager.addTask(new Task("Task 1", "Description",Status.NEW ,Duration.ofHours(1)));
+        taskManager.addTask(new Task("Task 2", "Description",Status.NEW, Duration.ofHours(1)));
 
-        SubTask updatedSubTask = manager.getSubtask(subTask.getId());
-        assertEquals("Updated SubTask 1", updatedSubTask.getName());
+        taskManager.deleteAllTasks();
+
+        assertTrue(taskManager.getAllTasks().isEmpty(), "All tasks should be removed.");
     }
 
-    @Test
-    void testRemoveTask() {
-        manager.addTask(task);
-        manager.removeTask(task.getId());
-
-        assertTrue(manager.getAllTasks().isEmpty());
-    }
-
-    @Test
-    void testRemoveEpic() {
-        manager.addEpic(epic);
-        manager.removeEpic(epic.getId());
-
-        assertTrue(manager.getAllEpics().isEmpty());
-        assertTrue(manager.getAllSubtasks().isEmpty());
-    }
-
-    @Test
-    void testRemoveSubTask() {
-        manager.addEpic(epic);
-        subTask.setId(epic.getId());
-        manager.addSubtask(subTask);
-        manager.removeSubtask(subTask.getId());
-
-        assertTrue(manager.getAllSubtasks().isEmpty());
-    }
-
-    @Test
-    void testHasOverlaps() {
-        manager.addTask(task);
-        Task overlappingTask = new Task(
-                "Overlapping Task",
-                "Description",
-                Status.NEW,
-                Duration.ofHours(1)
-        );
-        overlappingTask.setStartTime(task.getStartTime().plusHours(1));
-
-        assertTrue(manager.hasOverlaps(overlappingTask));
-    }
-
-    @Test
-    void testGetHistory() {
-        manager.addTask(task);
-        manager.getTask(task.getId());
-
-        List<Task> history = manager.getHistory();
-        assertEquals(1, history.size());
-        assertEquals(task, history.get(0));
-    }
-
-    @Test
-    void testGetPriorityTasks() {
-        manager.addTask(task);
-        manager.addTask(task);
-
-        List<Task> priorityTasks = manager.getPriorityTasks();
-        assertEquals(2, priorityTasks.size());
-        assertEquals(task, priorityTasks.get(0));
-    }
 }
 

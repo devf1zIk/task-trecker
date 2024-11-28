@@ -67,7 +67,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         save();
     }
 
-
     @Override
     public void removeEpic(int epicId) {
         super.removeEpic(epicId);
@@ -142,20 +141,16 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
         switch (type) {
             case EPIC:
-                return new Epic(id, name, description, status, duration, startTime);
+                return new Epic(id, name, description, status, duration);
             case SUBTASK:
                 int epicId = Integer.parseInt(fields[8]);
-                return new SubTask(id, name, description, status, duration, startTime, endTime, epicId);
+                return new SubTask(id, name, description, status, duration, epicId);
             case TASK:
-                return new Task(id, name, description, status, duration,startTime);
+                return new Task(id, name, description, status, duration);
             default:
                 throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
         }
     }
-
-
-
-
 
     public static FileBackedTaskManager loadFromFile(File file) {
         FileBackedTaskManager manager = new FileBackedTaskManager(file);
