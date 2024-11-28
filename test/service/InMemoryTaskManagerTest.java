@@ -1,5 +1,4 @@
 package service;
-
 import model.Epic;
 import model.SubTask;
 import model.Task;
@@ -8,7 +7,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
 import model.enums.Status;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

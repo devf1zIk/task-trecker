@@ -1,5 +1,4 @@
 package model;
-
 import model.enums.Status;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -14,7 +13,6 @@ public class SubTask extends Task {
         this.endTime = getEndTime();
         this.epicId = epicId;
     }
-
 
     public int getEpicId() {
         return epicId;

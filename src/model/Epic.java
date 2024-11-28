@@ -1,5 +1,4 @@
 package model;
-
 import model.enums.Status;
 import java.time.Duration;
 import java.time.LocalDateTime;

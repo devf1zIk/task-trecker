@@ -1,5 +1,4 @@
 package model;
-
 public class Node {
 
     private Task task;
