@@ -215,7 +215,7 @@ public class InMemoryTaskManager implements TaskManager {
             historyManager.remove(taskId);
         }
         tasks.clear();
-        prioritizedTasks.removeIf(task -> task instanceof Task);
+        prioritizedTasks.clear();
     }
 
     @Override
@@ -269,7 +269,6 @@ public class InMemoryTaskManager implements TaskManager {
         return new ArrayList<>();
     }
 
-    @Override
     public List<Task> getPriorityTasks() {
         return new ArrayList<>(prioritizedTasks);
     }
