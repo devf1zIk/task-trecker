@@ -50,6 +50,4 @@ public interface TaskManager {
 
     List<Task> getPriorityTasks();
 
-    boolean hasOverlaps(Task task);
-
 }

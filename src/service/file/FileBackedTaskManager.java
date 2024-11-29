@@ -12,7 +12,6 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
@@ -97,7 +96,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private void save() {
         try (Writer writer = new FileWriter(file)) {
-            writer.write("id,type,name,description,status,startTime,duration,endTime,epicId\n");
+            writer.write("id,type,name,description,status,startTime,duration,epicId\n");
             for (Task task : getAllTasks()) {
                 writer.write(toCSV(task) + "\n");
             }
@@ -114,8 +113,9 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private String toCSV(Task task) {
         String type = task instanceof Epic ? "EPIC" : (task instanceof SubTask ? "SUBTASK" : "TASK");
-        String epicId = task instanceof SubTask ? String.valueOf(((SubTask) task).getEpicId()) : " ";
-        return String.format("%d,%s,%s,%s,%s,%s,%s,%s,%s",
+        String epicId = task instanceof SubTask ? String.valueOf(((SubTask) task).getEpicId()) : "";
+
+        return String.format("%d,%s,%s,%s,%s,%s,%s,%s",
                 task.getId(),
                 type,
                 task.getName(),
@@ -123,8 +123,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 task.getStatus().name(),
                 task.getStartTime(),
                 task.getDuration(),
-                task.getEndTime(),
-                type.equals("SUBTASK") ? "," + epicId : ""
+                epicId
         );
     }
 
@@ -138,11 +137,14 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         String name = fields[2];
         String description = fields[3];
         Status status = Status.valueOf(fields[4]);
-        Duration duration = Duration.parse(fields[5]);
-        LocalDateTime startTime = LocalDateTime.parse(fields[6]);
+        LocalDateTime startTime = LocalDateTime.parse(fields[5]);
+        Duration duration = Duration.parse(fields[6]);
+        LocalDateTime endTime = fields.length > 7 && !fields[7].isBlank() ? LocalDateTime.parse(fields[7]) : null;
+
+
         switch (type) {
             case "EPIC":
-                return new Epic(id, name, description, status, startTime, duration);
+                return new Epic(id, name, description, status, startTime, duration,endTime);
             case "SUBTASK":
                 if (fields.length < 8) {
                     throw new ManagerSaveException("Для подзадачи требуется указать ID эпика.", new Throwable("Epic"));
@@ -195,14 +197,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         return manager;
     }
 
-    public List<SubTask> getEpicSubtasks(int epicId) {
-        List<SubTask> epicSubtasks = new ArrayList<>();
-        for (SubTask subtask : subtasks.values()) {
-            if (subtask.getEpicId() == epicId) {
-                epicSubtasks.add(subtask);
-            }
-        }
-        return epicSubtasks;
-    }
+
 
 }

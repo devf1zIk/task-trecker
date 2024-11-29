@@ -8,17 +8,28 @@ import java.util.List;
 public class Epic extends Task {
 
     private final List<Integer> subTasksIds = new ArrayList<>();
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
 
-    public Epic(int id, String name, String description, Status status,Duration duration) {
-        super(id, name, description, status, duration);
-        this.startTime = LocalDateTime.now();
-        this.endTime = startTime.plus(duration);
+    public Epic(int id, String name, String description, Status status, LocalDateTime startTime, Duration duration) {
+        super(id,name,description,status,startTime,duration);
     }
 
-    public Epic(int id, String name, String description, Status status,LocalDateTime startTime,Duration duration) {
+    public Epic(int id, String name, String description, Status status, LocalDateTime startTime, Duration duration, LocalDateTime endTime) {
         super(id, name, description, status, duration);
-        this.startTime = startTime;
-        this.endTime = startTime.plus(duration);
+        this.startTime = (startTime != null) ? startTime : LocalDateTime.now();
+        this.endTime = (endTime != null) ? endTime : updateEndTime();
+    }
+
+    public LocalDateTime updateEndTime() {
+        if (startTime == null || duration == null) {
+            return null;
+        }
+        return startTime.plus(duration);
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 
     public List<Integer> getSubTasks() {
@@ -40,14 +51,14 @@ public class Epic extends Task {
     @Override
     public String toString() {
         return "Epic{" +
-                "id=" + getId() +
-                ", name='" + getName() + '\'' +
-                ", description='" + getDescription() + '\'' +
-                ", status=" + getStatus() +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", status=" + status +
                 ", subTasksIds=" + subTasksIds +
                 ", startTime=" + endTime +
                 ", endTime=" + startTime +
-                ", duration=" + getDuration() +
+                ", duration=" + duration +
                 '}';
     }
 }

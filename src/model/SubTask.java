@@ -7,24 +7,8 @@ public class SubTask extends Task {
 
     private final int epicId;
 
-    public SubTask(int id, String name, String description, Status status,Duration duration, int epicId) {
-        super(id,name,description,status,duration);
-        this.startTime = LocalDateTime.now();
-        this.endTime = getEndTime();
-        this.epicId = epicId;
-    }
-
-    public SubTask(int id, String name, String description, Status status,Duration duration,LocalDateTime endTime,int epicId) {
-        super(id,name,description,status,duration);
-        this.startTime = LocalDateTime.now();
-        this.endTime = getEndTime();
-        this.epicId = epicId;
-    }
-
     public SubTask(int id, String name, String description, Status status,LocalDateTime startTime,Duration duration, int epicId) {
-        super(id,name,description,status,duration);
-        this.startTime = startTime;
-        this.endTime = getEndTime();
+        super(id, name, description, status, startTime, duration);
         this.epicId = epicId;
     }
 
@@ -35,13 +19,13 @@ public class SubTask extends Task {
     @Override
     public String toString() {
         return "SubTask{" +
-                "id=" + getId() +
-                ", name='" + getName() + '\'' +
-                ", description='" + getDescription() + '\'' +
-                ", status=" + getStatus() +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", status=" + status +
                 ", epicId=" + epicId +
-                ", startTime=" + getStartTime() +
-                ", duration=" + getDuration() +
+                ", startTime=" + startTime +
+                ", duration=" + duration +
                 '}';
     }
 }

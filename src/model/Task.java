@@ -11,43 +11,23 @@ public class Task {
     protected Status status;
     protected String description;
     protected Duration duration;
-    protected LocalDateTime startTime;
-    protected LocalDateTime endTime;
+    protected LocalDateTime startTime = LocalDateTime.now();
+    protected Duration defaultDuration = Duration.ZERO;
 
     public Task(int id, String name,String description, Status status,Duration duration) {
         this.id = id;
         this.name = name;
         this.status = status;
         this.description = description;
-        this.startTime = LocalDateTime.now();
-        this.endTime = startTime.plus(duration);
-        this.duration = duration;
+        this.duration = defaultDuration;
     }
 
-    public Task(int id, String name, String description, Status status, LocalDateTime startTime, Duration duration) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.status = status;
-
-        if (startTime == null || duration == null) {
-            this.startTime = null;
-            this.duration = null;
-            this.endTime = null;
-        } else {
-            this.startTime = startTime;
-            this.duration = duration;
-            this.endTime = startTime.plus(duration);
-        }
-    }
-
-    public Task(int id,String name, String description, Status status,LocalDateTime startTime, Duration duration,LocalDateTime endTime) {
+    public Task(int id,String name, String description, Status status,LocalDateTime startTime, Duration duration) {
         this.name = name;
         this.status = status;
         this.description = description;
-        this.startTime = LocalDateTime.now();
-        this.duration = duration;
-        this.endTime = endTime;
+        this.startTime = startTime;
+        this.duration = defaultDuration;
     }
 
     public int getId() {
@@ -98,23 +78,11 @@ public class Task {
         this.startTime = deadline;
     }
 
-    public LocalDateTime getEndTime() {
-        if (startTime == null || duration == null) {
-            return null;
-        }
-        return startTime.plus(duration);
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Task task)) return false;
-        return id == task.id
-                && Objects.equals(name, task.name)
-                && Objects.equals(description, task.description)
-                && status == task.status
-                && Objects.equals(duration, task.duration)
-                && Objects.equals(startTime, task.startTime);
+        return id == task.id;
     }
 
     @Override
