@@ -23,16 +23,16 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     protected SubTask subTask1;
     protected SubTask subTask2;
     protected LocalDateTime startTime = LocalDateTime.now();
-    protected Duration duration = Duration.ofSeconds(10);
+    protected Duration duration = Duration.ofMinutes(1);
 
     @BeforeEach
     void setUp() throws IOException {
-        task1 = new Task(1,"task1","description",Status.NEW,startTime,duration);
-        task2 = new Task(2,"task2","description",Status.NEW,startTime,duration);
-        task3 = new Task(3,"task3","description",Status.NEW,startTime,duration);
+        task1 = new Task(50,"spring boot1","java ee",Status.NEW,LocalDateTime.of(1,1,1,1,1,1),Duration.ofMinutes(1));
+        task2 = new Task(51,"spring boot2","java se",Status.NEW,LocalDateTime.of(2,10,11,12,33,45),Duration.ofMinutes(3));
+        task3 = new Task(52,"spring boot3","fastapi",Status.NEW,LocalDateTime.of(4,4,4,4,4,4),Duration.ofMinutes(4));
 
-        epic = new Epic(1, "Epic 1", "Description 1", Status.NEW,startTime, duration);
-        epic2 = new Epic(2, "Epic 2", "Description 2", Status.NEW,startTime, duration);
+        epic = new Epic(55, "postgresql 1", "postgresql 1", Status.NEW,LocalDateTime.of(5,5,5,5,5,5),Duration.ofMinutes(3));
+        epic2 = new Epic(56, "postgresql 2", "mysql 2", Status.NEW,LocalDateTime.of(11,10,17,17,17,17),Duration.ofMinutes(3));
 
         taskManager.addTask(task1);
         taskManager.addTask(task2);
@@ -40,8 +40,8 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         taskManager.addEpic(epic);
         taskManager.addEpic(epic2);
 
-        subTask1 = new SubTask(1, "Subtask 1", "Description 1", Status.NEW,startTime,duration, epic.getId());
-        subTask2 = new SubTask(2, "Subtask 2", "Description 2", Status.NEW,startTime,duration, epic2.getId());
+        subTask1 = new SubTask(6, "task is done", "task", Status.NEW,LocalDateTime.of(12,5,4,2,5,6),Duration.ofMinutes(10), epic.getId());
+        subTask2 = new SubTask(7, "tasks", "descr", Status.NEW,LocalDateTime.of(16,2,4,6,7,11),Duration.ofMinutes(1), epic2.getId());
 
         taskManager.addSubtask(subTask1);
         taskManager.addSubtask(subTask2);

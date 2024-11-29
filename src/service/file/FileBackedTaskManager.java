@@ -96,7 +96,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private void save() {
         try (Writer writer = new FileWriter(file)) {
-            writer.write("id,type,name,description,status,startTime,duration,epicId\n");
+            writer.write("id,type,name,description,status,startTime,duration,endTime,epicId\n");
             for (Task task : getAllTasks()) {
                 writer.write(toCSV(task) + "\n");
             }

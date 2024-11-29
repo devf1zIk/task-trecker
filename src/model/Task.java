@@ -12,14 +12,13 @@ public class Task {
     protected String description;
     protected Duration duration;
     protected LocalDateTime startTime = LocalDateTime.now();
-    protected Duration defaultDuration = Duration.ZERO;
 
     public Task(int id, String name,String description, Status status,Duration duration) {
         this.id = id;
         this.name = name;
         this.status = status;
         this.description = description;
-        this.duration = defaultDuration;
+        this.duration = duration;
     }
 
     public Task(int id,String name, String description, Status status,LocalDateTime startTime, Duration duration) {
@@ -27,7 +26,7 @@ public class Task {
         this.status = status;
         this.description = description;
         this.startTime = startTime;
-        this.duration = defaultDuration;
+        this.duration = duration;
     }
 
     public int getId() {
