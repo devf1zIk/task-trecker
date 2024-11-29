@@ -18,10 +18,10 @@ public class Epic extends Task {
     public Epic(int id, String name, String description, Status status, LocalDateTime startTime, Duration duration, LocalDateTime endTime) {
         super(id, name, description, status, duration);
         this.startTime = (startTime != null) ? startTime : LocalDateTime.now();
-        this.endTime = (endTime != null) ? endTime : updateEndTime();
+        this.endTime = (endTime != null) ? endTime : getEndTime();
     }
 
-    public LocalDateTime updateEndTime() {
+    public LocalDateTime getEndTime() {
         if (startTime == null || duration == null) {
             return null;
         }
