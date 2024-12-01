@@ -8,7 +8,6 @@ import service.Managers;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class InMemoryTaskManager implements TaskManager {
 
@@ -197,7 +196,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (epic != null) {
             for (Integer subtaskId : epic.getSubTasks()) {
                 SubTask subTask = subtasks.remove(subtaskId);
-                if(subTask != null) {
+                if (subTask != null) {
                     prioritizedTasks.remove(subTask);
                     historyManager.remove(subtaskId);
                 }
@@ -235,9 +234,9 @@ public class InMemoryTaskManager implements TaskManager {
         for (Integer epicId : epics.keySet()) {
             Epic epic = epics.get(epicId);
             if (epic != null) {
-               for(Integer subtaskId : epic.getSubTasks()) {
+               for (Integer subtaskId : epic.getSubTasks()) {
                    SubTask subTask = subtasks.remove(subtaskId);
-                   if(subTask != null) {
+                   if (subTask != null) {
                        prioritizedTasks.remove(subTask);
                    }
                }
