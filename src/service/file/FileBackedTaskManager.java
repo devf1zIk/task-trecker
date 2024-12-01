@@ -165,7 +165,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             while (reader.ready()) {
                 String lines = reader.readLine();
-                if(lines.equals(Stroke) || lines.trim().isEmpty()) {
+                if (lines.equals(Stroke) || lines.trim().isEmpty()) {
                     continue;
                 }
                 Task task = manager.fromCSV(lines.split(","));
@@ -189,7 +189,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     }
                 }
             }
-        }catch (IOException e) {
+        } catch (IOException e) {
             throw new ManagerSaveException(e.getMessage(),new Throwable("loadFromFile"));
         }
         manager.prioritizedTasks = new TreeSet<>(tasks.values());
