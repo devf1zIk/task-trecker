@@ -86,7 +86,7 @@ public class Task {
         this.startTime = deadline;
     }
 
-    public LocalDateTime getEndTime(){
+    public LocalDateTime getEndTime() {
         return startTime.plus(duration);
     }
 
