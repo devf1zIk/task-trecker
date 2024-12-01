@@ -1,5 +1,6 @@
 package service;
 
+import exception.ValidationException;
 import model.Epic;
 import model.SubTask;
 import model.Task;
@@ -8,89 +9,122 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import service.managers.TaskManager;
-import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class TaskManagerTest<T extends TaskManager> {
+    T taskManager;
 
-    protected T taskManager;
-    protected Task task1;
-    protected Task task2;
-    protected Task task3;
-    protected Epic epic;
-    protected Epic epic2;
-    protected SubTask subTask1;
-    protected SubTask subTask2;
-    protected LocalDateTime startTime = LocalDateTime.now();
-    protected Duration duration = Duration.ofMinutes(1);
+    protected abstract T createTaskManager();
+
 
     @BeforeEach
-    void setUp() throws IOException {
-        task1 = new Task(50,"spring boot1","java ee",Status.NEW,LocalDateTime.of(1,1,1,1,1,1),Duration.ofMinutes(1));
-        task2 = new Task(51,"spring boot2","java se",Status.NEW,LocalDateTime.of(2,10,11,12,33,45),Duration.ofMinutes(3));
-        task3 = new Task(52,"spring boot3","fastapi",Status.NEW,LocalDateTime.of(4,4,4,4,4,4),Duration.ofMinutes(4));
+    void setUp(){
+        taskManager = createTaskManager();
+    }
 
-        epic = new Epic(55, "postgresql 1", "postgresql 1", Status.NEW,LocalDateTime.of(5,5,5,5,5,5),Duration.ofMinutes(3));
-        epic2 = new Epic(56, "postgresql 2", "mysql 2", Status.NEW,LocalDateTime.of(11,10,17,17,17,17),Duration.ofMinutes(3));
+    @Test
+    void shouldAddAndRetrieveTask() {
+        Task task = new Task(1,"Task 1", "Description 1", Status.NEW,LocalDateTime.of(2000,12,3,4,5,6), Duration.ofMinutes(2));
+        taskManager.addTask(task);
 
-        taskManager.addTask(task1);
-        taskManager.addTask(task2);
-        taskManager.addTask(task3);
+        Task retrievedTask = taskManager.getTask(task.getId());
+        Assertions.assertEquals(task, retrievedTask, "Добавленная задача должна быть доступна по ID.");
+    }
+
+    @Test
+    void shouldAddAndRetrieveEpic() {
+        Epic epic = new Epic(1,"Epic 1", "Description 1",Status.NEW,Duration.ofMinutes(1));
         taskManager.addEpic(epic);
-        taskManager.addEpic(epic2);
 
-        subTask1 = new SubTask(6, "task is done", "task", Status.NEW,LocalDateTime.of(12,5,4,2,5,6),Duration.ofMinutes(10), epic.getId());
-        subTask2 = new SubTask(7, "tasks", "descr", Status.NEW,LocalDateTime.of(16,2,4,6,7,11),Duration.ofMinutes(1), epic2.getId());
-
-        taskManager.addSubtask(subTask1);
-        taskManager.addSubtask(subTask2);
+        Epic retrievedEpic = taskManager.getEpic(epic.getId());
+        assertEquals("Добавленный эпик должен быть доступен по ID.", epic, retrievedEpic);
     }
 
     @Test
-    void shouldSetEpicStatusToNewWhenAllSubtasksAreNew() {
-        taskManager.updateStatus(epic);
-        Assertions.assertEquals(Status.NEW, epic.getStatus());
+    void shouldAddAndRetrieveSubtask() {
+        Epic epic = new Epic(4,"Epic 1", "Description 1",Status.NEW,Duration.ofMinutes(1));
+        taskManager.addEpic(epic);
+
+        SubTask subtask = new SubTask(5,"SubTask 1", "Description 1", Status.NEW,LocalDateTime.of(2016,4,5,6,7,8), Duration.ofMinutes(1), epic.getId());
+        taskManager.addSubtask(subtask);
+
+        SubTask retrievedSubtask = taskManager.getSubtask(subtask.getId());
+        assertEquals("Добавленная подзадача должна быть доступна по ID.", subtask, retrievedSubtask);
+
+        List<SubTask> subtasks = taskManager.getSubtasksOfEpic(epic.getId());
+        assertTrue(subtasks.contains(subtask), "Подзадача должна быть связана с эпиком.");
     }
 
     @Test
-    void shouldSetEpicStatusToInProgressWhenAnySubtaskIsInProgress() {
-        subTask1.setStatus(Status.IN_PROGRESS);
-        taskManager.updateSubtask(subTask1);
+    void shouldUpdateTask() {
+        Task task = new Task(7,"Task 1", "Description 1", Status.NEW, LocalDateTime.of(2013, 3, 4, 5, 6, 7), Duration.ofMinutes(2));
+        taskManager.addTask(task);
 
-        taskManager.updateStatus(epic);
-        Assertions.assertEquals(Status.IN_PROGRESS, epic.getStatus());
+        task.setName("Updated Task");
+        taskManager.updateTask(task);
+
+        Task updatedTask = taskManager.getTask(task.getId());
+
+        Assertions.assertEquals("Updated Task", updatedTask.getName(), "Задача должна обновляться.");
     }
 
     @Test
-    void shouldSetEpicStatusToDoneWhenAllSubtasksAreDone() {
-        subTask1.setStatus(Status.DONE);
-        subTask2.setStatus(Status.DONE);
-        taskManager.updateSubtask(subTask1);
-        taskManager.updateSubtask(subTask2);
+    void shouldDeleteTask() {
+        Task task = new Task(3,"Task 1", "Description 1",Status.NEW, LocalDateTime.of(2004,4,4,4,4,4), Duration.ofMinutes(2));
+        taskManager.addTask(task);
 
-        taskManager.updateStatus(epic);
-        Assertions.assertEquals(Status.DONE, epic.getStatus());
+        taskManager.removeTask(task.getId());
+        assertNull(taskManager.getTask(task.getId()), "Удалённая задача не должна быть доступна.");
     }
 
     @Test
-    void shouldSetEpicStatusToNewWhenSubtasksAreNotDoneAndNotInProgress() {
-        subTask1.setStatus(Status.NEW);
-        subTask2.setStatus(Status.DONE);
-        taskManager.updateSubtask(subTask1);
-        taskManager.updateSubtask(subTask2);
+    void shouldDeleteEpicAndSubtasks() {
+        Epic epic = new Epic(3,"Epic 1", "Description 1",Status.NEW,Duration.ofMinutes(1));
+        taskManager.addEpic(epic);
 
-        taskManager.updateStatus(epic);
-        Assertions.assertEquals(Status.NEW, epic.getStatus());
+        SubTask subtask = new SubTask(4,"SubTask 1", "Description 1",Status.NEW, LocalDateTime.of(2004,3,3,3,3,3), Duration.ofMinutes(1), epic.getId());
+        taskManager.addSubtask(subtask);
+
+        taskManager.removeEpic(epic.getId());
+        assertNull(taskManager.getEpic(epic.getId()), "Удалённый эпик не должен быть доступен.");
+        assertNull(taskManager.getSubtask(subtask.getId()), "Подзадачи удалённого эпика не должны быть доступны.");
     }
 
     @Test
-    void shouldSetEpicStatusToNewWhenNoSubtasksExist() {
-        taskManager.removeSubtask(subTask1.getId());
-        taskManager.removeSubtask(subTask2.getId());
+    void shouldRetrieveAllSubtasks() {
+        Epic epic = new Epic(1,"Epic 1", "Description 1", Status.NEW, Duration.ofMinutes(1));
+        taskManager.addEpic(epic);
 
-        taskManager.updateStatus(epic);
-        Assertions.assertEquals(Status.NEW, epic.getStatus());
+        SubTask subtask1 = new SubTask(2,"SubTask 1", "Description 1", Status.NEW, LocalDateTime.of(1990, 12, 4, 5, 6, 7), Duration.ofMinutes(1), epic.getId());
+        SubTask subtask2 = new SubTask(3,"SubTask 2", "Description 2", Status.NEW, LocalDateTime.of(2001, 5, 6, 7, 8, 9), Duration.ofMinutes(2), epic.getId());
+        taskManager.addSubtask(subtask1);
+        taskManager.addSubtask(subtask2);
+
+        List<SubTask> subtasks = taskManager.getAllSubtasks();
+
+        Assertions.assertEquals(2, subtasks.size(), "Должно быть добавлено две подзадачи.");
+
+        assertTrue(subtasks.contains(subtask1));
+        assertTrue(subtasks.contains(subtask2));
     }
+
+    @Test
+    void shouldCheckForOverlaps() {
+        Task task1 = new Task(4, "Task 1", "Description 1", Status.NEW,
+                LocalDateTime.of(2018, 6, 7, 8, 9, 9), Duration.ofMinutes(2));
+        taskManager.addTask(task1);
+
+        Task overlappingTask = new Task(5, "Overlapping Task", "Description", Status.NEW,
+                LocalDateTime.of(2018, 6, 7, 8, 9, 8), Duration.ofMinutes(2));
+
+        assertThrows(ValidationException.class,
+                () -> taskManager.addTask(overlappingTask),
+                "Пересекающиеся задачи не должны быть добавлены.");
+    }
+
 }
-

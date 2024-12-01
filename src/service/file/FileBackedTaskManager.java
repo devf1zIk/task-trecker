@@ -4,19 +4,19 @@ import model.Epic;
 import model.SubTask;
 import model.Task;
 import model.enums.Status;
+import model.enums.TaskType;
 import service.managers.InMemoryTaskManager;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.file.Files;
+import java.io.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeSet;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private final File file;
+    private static final String Stroke = "id,type,name,description,status,startTime,duration,endTime,epicId\n";
 
     public FileBackedTaskManager(File file) {
         this.file = file;
@@ -96,7 +96,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private void save() {
             try (Writer writer = new FileWriter(file)) {
-                writer.write("id,type,name,description,status,startTime,duration,endTime,epicId\n");
+                writer.write(Stroke);
                 for (Task task : getAllTasks()) {
                     writer.write(toCSV(task) + "\n");
                 }
@@ -109,13 +109,13 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             } catch (IOException e) {
                 throw new ManagerSaveException("Ошибка при сохранении в файл", e);
             }
-        }
+    }
 
     private String toCSV(Task task) {
             String type = task instanceof Epic ? "EPIC" : (task instanceof SubTask ? "SUBTASK" : "TASK");
             String epicId = task instanceof SubTask ? String.valueOf(((SubTask) task).getEpicId()) : "";
 
-            return String.format("%d,%s,%s,%s,%s,%s,%s,%s",
+            return String.format("%d,%s,%s,%s,%s,%s,%s,%s,%s",
                     task.getId(),
                     type,
                     task.getName(),
@@ -123,83 +123,77 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     task.getStatus().name(),
                     task.getStartTime(),
                     task.getDuration(),
+                    task.getEndTime(),
                     epicId
             );
-        }
+    }
 
     private Task fromCSV(String[] fields) {
-        if (fields.length < 7) {
-            throw new ManagerSaveException("Недостаточное количество полей в строке CSV.", new Throwable("csv"));
-        }
+        FileBackedTaskManager manager = new FileBackedTaskManager(file);
+        try{
+            int id = Integer.parseInt(fields[0]);
+            TaskType type = TaskType.valueOf(fields[1].toUpperCase());
+            String name = fields[2];
+            Status status = Status.valueOf(fields[3]);
+            String description = fields[4];
+            Duration duration = fields[5].isEmpty() ? Duration.ZERO : Duration.parse(fields[5]);
+            LocalDateTime startTime = fields[6].isEmpty() ? null : LocalDateTime.parse(fields[6]);
+            switch (type) {
+                case TASK:
+                    return new Task(id,name, description, Status.NEW, startTime, duration);
+                case EPIC:
+                    return new Epic(id, name, description,Status.NEW);
+                case SUBTASK:
+                    int epicId = Integer.parseInt(fields[7]);
+                    return new SubTask(id,name,description,Status.NEW,LocalDateTime.now(),Duration.ofMinutes(1),epicId);
+                default:
+                    throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
+            }
 
-        int id = Integer.parseInt(fields[0]);
-        String type = fields[1];
-        String name = fields[2];
-        String description = fields[3];
-        Status status = Status.valueOf(fields[4]);
-        LocalDateTime startTime = LocalDateTime.parse(fields[5]);
-        Duration duration = Duration.parse(fields[6]);
-
-        LocalDateTime endTime = startTime.plus(duration);
-
-        int epicId = -1;
-        if (type.equals("SUBTASK") && fields.length > 7) {
-            epicId = Integer.parseInt(fields[7]);
-        }
-
-        switch (type) {
-            case "EPIC":
-                return new Epic(id, name, description, status, startTime, duration, endTime);
-            case "SUBTASK":
-                if (epicId == -1) {
-                    throw new ManagerSaveException("Для подзадачи требуется указать ID эпика.", new Throwable("csv"));
-                }
-                return new SubTask(id, name, description, status, startTime, duration, epicId);
-            case "TASK":
-                return new Task(id, name, description, status, startTime, duration);
-            default:
-                throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
+        }catch (Exception e){
+            throw new ManagerSaveException("Ошибка с строкой ",new Throwable("fromCSV"));
         }
     }
 
-
     public static FileBackedTaskManager loadFromFile(File file) {
-            FileBackedTaskManager manager = new FileBackedTaskManager(file);
-            int maxId = 0;
-            try {
-                List<String> lines = Files.readAllLines(file.toPath());
-                if (lines.isEmpty()) {
-                    return manager;
+        FileBackedTaskManager manager = new FileBackedTaskManager(file);
+        Map<Integer, Task> tasks = new HashMap<>();
+        Map<Integer, Epic> epics = new HashMap<>();
+        Map<Integer, SubTask> subtasks = new HashMap<>();
+        TaskType[] types = {TaskType.EPIC, TaskType.TASK, TaskType.SUBTASK};
+        int id = 0;
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))){
+            while (reader.ready()) {
+                String lines = reader.readLine();
+                if(lines.equals(Stroke) || lines.trim().isEmpty()){
+                    continue;
                 }
-                for (String line : lines.subList(1, lines.size())) {
-                    if (line.isBlank()) continue;
-                    try {
-                        String[] fields = line.split(",");
-                        Task task = manager.fromCSV(fields);
+                Task task = manager.fromCSV(lines.split(","));
+                if(task.getId() >= id){
+                    tasks.put(id, task);
+                }
 
-                        if (task.getId() > maxId) {
-                            maxId = task.getId();
-                        }
-                        if (task instanceof Epic) {
-                            manager.epics.put(task.getId(), (Epic) task);
-                        } else if (task instanceof SubTask) {
-                            manager.subtasks.put(task.getId(), (SubTask) task);
-                            Epic epic = manager.epics.get(((SubTask) task).getEpicId());
-                            epic.addSubTask(task.getId());
-                        } else {
-                            manager.tasks.put(task.getId(), task);
-                        }
-                    } catch (Exception e) {
-                        throw new ManagerSaveException("Ошибка при разборе строки: " + line, e);
+                for(TaskType type : types){
+                    switch (type){
+                        case TASK:
+                            tasks.put(id, task);
+                            manager.prioritizedTasks.add(manager.getTask(id));
+                            break;
+                        case EPIC:
+                            manager.epics.put(task.getId(),(Epic) task);
+                            break;
+                        case SUBTASK:
+                            manager.subtasks.put(task.getId(),(SubTask) task);
+                            manager.prioritizedTasks.addAll(manager.getAllSubtasks());
+                            break;
                     }
                 }
-
-            } catch (IOException e) {
-                throw new ManagerSaveException("Ошибка при загрузке из файла: " + file.getName(), e);
             }
-
-            manager.id = maxId + 1;
-            return manager;
+        }catch (IOException e) {
+            throw new ManagerSaveException(e.getMessage(),new Throwable("loadFromFile"));
         }
+        manager.prioritizedTasks = new TreeSet<>(tasks.values());
+        return manager;
+    }
 
 }

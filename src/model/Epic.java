@@ -8,24 +8,21 @@ import java.util.List;
 public class Epic extends Task {
 
     private final List<Integer> subTasksIds = new ArrayList<>();
-    private LocalDateTime startTime;
     private LocalDateTime endTime;
 
-    public Epic(int id, String name, String description, Status status, LocalDateTime startTime, Duration duration) {
-        super(id,name,description,status,startTime,duration);
+    public Epic(int id, String name, String description, Status status, Duration duration) {
+        super(id,name,description,status,duration);
     }
 
-    public Epic(int id, String name, String description, Status status, LocalDateTime startTime, Duration duration, LocalDateTime endTime) {
-        super(id, name, description, status, duration);
-        this.startTime = (startTime != null) ? startTime : LocalDateTime.now();
-        this.endTime = (endTime != null) ? endTime : getEndTime();
+    public Epic(int id, String name, String description, Status status) {
+        super(id,name,description,status);
     }
 
+
+
+    @Override
     public LocalDateTime getEndTime() {
-        if (startTime == null || duration == null) {
-            return null;
-        }
-        return startTime.plus(duration);
+        return endTime;
     }
 
     public void setEndTime(LocalDateTime endTime) {
@@ -56,8 +53,8 @@ public class Epic extends Task {
                 ", description='" + description + '\'' +
                 ", status=" + status +
                 ", subTasksIds=" + subTasksIds +
-                ", startTime=" + endTime +
-                ", endTime=" + startTime +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
                 ", duration=" + duration +
                 '}';
     }
