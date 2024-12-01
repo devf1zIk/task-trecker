@@ -130,7 +130,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private Task fromCSV(String[] fields) {
         FileBackedTaskManager manager = new FileBackedTaskManager(file);
-        try{
+        try {
             int id = Integer.parseInt(fields[0]);
             TaskType type = TaskType.valueOf(fields[1].toUpperCase());
             String name = fields[2];
@@ -150,7 +150,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
             }
 
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new ManagerSaveException("Ошибка с строкой ",new Throwable("fromCSV"));
         }
     }
@@ -162,19 +162,19 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         Map<Integer, SubTask> subtasks = new HashMap<>();
         TaskType[] types = {TaskType.EPIC, TaskType.TASK, TaskType.SUBTASK};
         int id = 0;
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))){
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             while (reader.ready()) {
                 String lines = reader.readLine();
-                if(lines.equals(Stroke) || lines.trim().isEmpty()){
+                if(lines.equals(Stroke) || lines.trim().isEmpty()) {
                     continue;
                 }
                 Task task = manager.fromCSV(lines.split(","));
-                if(task.getId() >= id){
+                if (task.getId() >= id) {
                     tasks.put(id, task);
                 }
 
-                for(TaskType type : types){
-                    switch (type){
+                for (TaskType type : types) {
+                    switch (type) {
                         case TASK:
                             tasks.put(id, task);
                             manager.prioritizedTasks.add(manager.getTask(id));
