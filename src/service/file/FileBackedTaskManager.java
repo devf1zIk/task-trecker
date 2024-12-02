@@ -180,7 +180,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     } else {
                         manager.tasks.put(task.getId(), task);
                     }
-                    if(!(task instanceof Epic)) {
+                    if (!(task instanceof Epic)) {
                         manager.getPriorityTasks().add(task);
                     }
 
