@@ -21,6 +21,12 @@ public class Task {
         this.duration = duration;
     }
 
+    public Task(int id,String name,String description){
+        this.id = id;
+        this.name = name;
+        this.description = description;
+    }
+
     public Task(int id,String name, String description, Status status,LocalDateTime startTime, Duration duration) {
         this.name = name;
         this.status = status;

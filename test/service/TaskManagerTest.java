@@ -127,4 +127,31 @@ public abstract class TaskManagerTest<T extends TaskManager> {
                 "Пересекающиеся задачи не должны быть добавлены.");
     }
 
+    @Test
+    void shouldDeleteTaskAndHistory() {
+        Task task = new Task(3,"Task 1", "Description 1", Status.NEW, LocalDateTime.of(2004,4,4,4,4,4), Duration.ofMinutes(2));
+        taskManager.addTask(task);
+
+        taskManager.removeTask(task.getId());
+
+        List<Task> history = taskManager.getHistory();
+
+        assertFalse(history.contains(task), "Задача не должна быть в истории после удаления.");
+    }
+
+    @Test
+    void shouldRemoveEpicAndSubtasksFromHistory() {
+        Epic epic = new Epic(3,"Epic 1", "Description 1", Status.NEW, Duration.ofMinutes(1));
+        taskManager.addEpic(epic);
+
+        SubTask subtask = new SubTask(4,"SubTask 1", "Description 1", Status.NEW, LocalDateTime.of(2004,3,3,3,3,3), Duration.ofMinutes(1), epic.getId());
+        taskManager.addSubtask(subtask);
+
+        taskManager.removeEpic(epic.getId());
+
+        List<Task> history = taskManager.getHistory();
+
+        assertFalse(history.contains(epic), "Эпик не должен быть в истории после удаления.");
+        assertFalse(history.contains(subtask), "Подзадача не должна быть в истории после удаления эпика.");
+    }
 }
