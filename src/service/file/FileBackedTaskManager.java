@@ -196,5 +196,4 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         manager.id = maxId + 1;
         return manager;
     }
-
 }
