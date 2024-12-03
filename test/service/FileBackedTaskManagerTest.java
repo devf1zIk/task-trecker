@@ -31,6 +31,42 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         super.setUp();
     }
 
+    @Test
+    void shouldSaveAndLoadTaskFromFile() {
+        Task task = new Task(7,"taskname","descr",LocalDateTime.of(2014,2,4,5,7,8),Duration.ofMinutes(4));
+        System.out.println(task);
+        taskManager.addTask(task);
+
+        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
+        Task loadedTask = loadedManager.getTask(task.getId());
+
+        assertNotNull(loadedTask, "Задача должна быть восстановлена из файла.");
+        assertEquals(task.getId(), loadedTask.getId(), "ID задачи не совпадает.");
+        assertEquals(task.getName(), loadedTask.getName(), "Название задачи не совпадает.");
+        assertEquals(task.getDescription(), loadedTask.getDescription(), "Описание задачи не совпадает.");
+        assertEquals(task.getStatus(), loadedTask.getStatus(), "Статус задачи не совпадает.");
+        assertEquals(task.getStartTime(), loadedTask.getStartTime(), "Время начала задачи не совпадает.");
+        assertEquals(task.getDuration(), loadedTask.getDuration(), "Продолжительность задачи не совпадает.");
+    }
+
+
+    @Test
+    void shouldSaveAndLoadEpicFromFile() {
+        Epic epic = new Epic(1, "Epic 1", "Description 1", Status.NEW, Duration.ZERO);
+        taskManager.addEpic(epic);
+
+        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
+        Epic loadedEpic = loadedManager.getEpic(epic.getId());
+
+        assertEquals(epic.getId(), loadedEpic.getId(), "ID эпика должен совпадать.");
+        assertEquals(epic.getName(), loadedEpic.getName(), "Имя эпика должно совпадать.");
+        assertEquals(epic.getDescription(), loadedEpic.getDescription(), "Описание эпика должно совпадать.");
+        assertEquals(Status.NEW, loadedEpic.getStatus(), "Статус эпика должен совпадать.");
+        assertNull(loadedEpic.getStartTime(), "Начальное время эпика должно быть null.");
+        assertNull(loadedEpic.getEndTime(), "Конечное время эпика должно быть null.");
+        assertEquals(Duration.ZERO, loadedEpic.getDuration(), "Длительность эпика должна быть 0.");
+    }
+
 
     @Test
     void shouldNotLoadTaskWithInvalidData() {

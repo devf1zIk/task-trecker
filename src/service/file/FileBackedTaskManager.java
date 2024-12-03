@@ -136,9 +136,9 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             LocalDateTime startTime = fields[6].isEmpty() ? null : LocalDateTime.parse(fields[6]);
             switch (type) {
                 case TASK:
-                    return new Task(id, name, description,startTime, duration);
+                    return new Task(id, name, description,Status.NEW,startTime, duration);
                 case EPIC:
-                    return new Epic(id, name, description);
+                    return new Epic(id, name, description,Status.NEW);
                 case SUBTASK:
                     int epicId = Integer.parseInt(fields[7]);
                     return new SubTask(id, name, description, startTime, duration, epicId);
