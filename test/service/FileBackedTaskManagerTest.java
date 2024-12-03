@@ -33,7 +33,7 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
 
     @Test
     void shouldSaveAndLoadTaskFromFile() {
-        Task task = new Task(7,"taskname","descr",LocalDateTime.of(2014,2,4,5,7,8),Duration.ofMinutes(4));
+        Task task = new Task(7,"taskname","descr",Status.NEW,LocalDateTime.of(2014,2,4,5,7,8),Duration.ofMinutes(4));
         System.out.println(task);
         taskManager.addTask(task);
 

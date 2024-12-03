@@ -131,14 +131,15 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             int id = Integer.parseInt(fields[0]);
             TaskType type = TaskType.valueOf(fields[1].toUpperCase());
             String name = fields[2];
+            Status status = Status.valueOf(fields[3]);
             String description = fields[4];
             Duration duration = fields[5].isEmpty() ? Duration.ZERO : Duration.parse(fields[5]);
             LocalDateTime startTime = fields[6].isEmpty() ? null : LocalDateTime.parse(fields[6]);
             switch (type) {
                 case TASK:
-                    return new Task(id, name, description,Status.NEW,startTime, duration);
+                    return new Task(id, name, description,status,startTime, duration);
                 case EPIC:
-                    return new Epic(id, name, description,Status.NEW);
+                    return new Epic(id, name, description);
                 case SUBTASK:
                     int epicId = Integer.parseInt(fields[7]);
                     return new SubTask(id, name, description, startTime, duration, epicId);
