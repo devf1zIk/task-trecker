@@ -15,7 +15,6 @@ import java.util.List;
 public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private final File file;
-    private static final String STROKE = "id,type,name,description,status,startTime,duration,endTime,epicId\n";
 
     public FileBackedTaskManager(File file) {
         this.file = file;
@@ -94,20 +93,20 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     private void save() {
-            try (Writer writer = new FileWriter(file)) {
-                writer.write(STROKE);
-                for (Task task : getAllTasks()) {
-                    writer.write(toCSV(task) + "\n");
-                }
-                for (Epic epic : getAllEpics()) {
-                    writer.write(toCSV(epic) + "\n");
-                }
-                for (SubTask subtask : getAllSubtasks()) {
-                    writer.write(toCSV(subtask) + "\n");
-                }
-            } catch (IOException e) {
-                throw new ManagerSaveException("Ошибка при сохранении в файл", e);
+        try (Writer writer = new FileWriter(file)) {
+            writer.write("id,type,name,description,status,startTime,duration,endTime,epicId\n");
+            for (Task task : getAllTasks()) {
+                writer.write(toCSV(task) + "\n");
             }
+            for (Epic epic : getAllEpics()) {
+                writer.write(toCSV(epic) + "\n");
+            }
+            for (SubTask subtask : getAllSubtasks()) {
+                writer.write(toCSV(subtask) + "\n");
+            }
+        } catch (IOException e) {
+            throw new ManagerSaveException("Ошибка при сохранении в файл", e);
+        }
     }
 
     private String toCSV(Task task) {
@@ -120,9 +119,9 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     task.getName(),
                     task.getDescription(),
                     task.getStatus(),
-                    task.getStartTime(),
-                    task.getDuration(),
-                    task.getEndTime(),
+                    task.getStartTime() != null ? task.getStartTime().toString() : "",
+                    task.getDuration() != null ? task.getDuration().toString() : "",
+                    task.getEndTime() != null ? task.getEndTime().toString() : "",
                     epicId
             );
     }
@@ -132,18 +131,17 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             int id = Integer.parseInt(fields[0]);
             TaskType type = TaskType.valueOf(fields[1].toUpperCase());
             String name = fields[2];
-            Status status = Status.valueOf(fields[3]);
             String description = fields[4];
             Duration duration = fields[5].isEmpty() ? Duration.ZERO : Duration.parse(fields[5]);
             LocalDateTime startTime = fields[6].isEmpty() ? null : LocalDateTime.parse(fields[6]);
             switch (type) {
                 case TASK:
-                    return new Task(id, name, description, status, startTime, duration);
+                    return new Task(id, name, description,startTime, duration);
                 case EPIC:
                     return new Epic(id, name, description);
                 case SUBTASK:
                     int epicId = Integer.parseInt(fields[7]);
-                    return new SubTask(id, name, description, status, startTime, duration, epicId);
+                    return new SubTask(id, name, description, startTime, duration, epicId);
                 default:
                     throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
             }
@@ -172,23 +170,24 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
                     if (task instanceof Epic) {
                         manager.epics.put(task.getId(), (Epic) task);
-
                     } else if (task instanceof SubTask) {
                         manager.subtasks.put(task.getId(), (SubTask) task);
                         Epic epic = manager.epics.get(((SubTask) task).getEpicId());
-                        epic.addSubTask(task.getId());
+                        if (epic != null) {
+                            epic.addSubTask(task.getId());
+                        }
                     } else {
                         manager.tasks.put(task.getId(), task);
                     }
+
                     if (!(task instanceof Epic)) {
                         manager.getPriorityTasks().add(task);
                     }
 
                 } catch (Exception e) {
-                        throw new ManagerSaveException("Ошибка при разборе строки: " + line, e);
+                    throw new ManagerSaveException("Ошибка при разборе строки: " + line, e);
                 }
             }
-
         } catch (IOException e) {
             throw new ManagerSaveException("Ошибка при загрузке из файла: " + file.getName(), e);
         }
