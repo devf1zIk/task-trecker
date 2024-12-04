@@ -302,12 +302,30 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     public void updateEpicTimeAndDuration(Epic epic) {
-        Optional<LocalDateTime> latestEndTime = epic.getSubTasks().stream()
-                .map(this::getSubtask)
-                .map(SubTask::getEndTime)
-                .max(LocalDateTime::compareTo);
 
-        latestEndTime.ifPresent(epic::setEndTime);
+        Duration duration = Duration.ZERO;
+        LocalDateTime startTime = null;
+        LocalDateTime endTime = null;
+
+        for (Integer subTaskId : epic.getSubTasks()) {
+            SubTask subTask = getSubtask(subTaskId);
+
+            if (subTask.getDuration() != null) {
+                duration = duration.plus(subTask.getDuration());
+            }
+            if (subTask.getStartTime() != null) {
+                if (startTime == null || subTask.getStartTime().isBefore(startTime)) {
+                    startTime = subTask.getStartTime();
+                }
+                if (endTime == null || subTask.getEndTime().isAfter(endTime)) {
+                    endTime = subTask.getEndTime();
+                }
+            }
+        }
+
+        epic.setStartTime(startTime);
+        epic.setDuration(duration);
+        epic.setEndTime(endTime);
     }
 
 

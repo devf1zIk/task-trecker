@@ -135,14 +135,15 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             Status status = Status.valueOf(fields[4].toUpperCase());
             LocalDateTime startTime = fields[5].isEmpty() ? null : LocalDateTime.parse(fields[5]);
             Duration duration = fields[6].isEmpty() ? Duration.ZERO : Duration.parse(fields[6]);
+            LocalDateTime endTime = fields[7].isEmpty() ? null : LocalDateTime.parse(fields[7]);
 
             switch (type) {
                 case TASK:
                     return new Task(id, name, description, status, startTime, duration);
                 case EPIC:
-                    return new Epic(id, name, description, status, startTime, duration);
+                    return new Epic(id, name, description, status, startTime, duration,endTime);
                 case SUBTASK:
-                    int epicId = Integer.parseInt(fields[7]);
+                    int epicId = Integer.parseInt(fields[8]);
                     return new SubTask(id, name, description, status, startTime, duration, epicId);
                 default:
                     throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
@@ -182,11 +183,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     } else {
                         manager.tasks.put(task.getId(), task);
                     }
-
-                    if (!(task instanceof Epic)) {
-                        manager.getPriorityTasks().add(task);
-                    }
-
+                    manager.prioritizedTasks.add(task);
+                    System.out.println(manager.prioritizedTasks.add(task));
                 } catch (Exception e) {
                     throw new ManagerSaveException("Ошибка при разборе строки: " + line, e);
                 }

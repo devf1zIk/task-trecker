@@ -21,11 +21,11 @@ public class Epic extends Task {
     public Epic(int id,String name,String description,Status status, LocalDateTime startTime,Duration duration) {
         super(id,name,description,status,duration);
         this.startTime = startTime;
+        this.endTime = getEndTime();
     }
 
     public Epic(int id, String name, String description,Status status,LocalDateTime startTime) {
         super(id,name,description,status);
-        this.endTime = startTime;
     }
 
     public Epic(int id,String name, String description) {
@@ -34,8 +34,8 @@ public class Epic extends Task {
 
     public Epic(int id, String name, String description,Status status,LocalDateTime startTime,Duration duration,LocalDateTime endTime) {
         super(id,name,description,status,duration);
-        this.startTime= startTime;
-        this.endTime= endTime;
+        this.startTime = startTime;
+        this.endTime = endTime;
     }
 
 
