@@ -110,20 +110,20 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     private String toCSV(Task task) {
-            String type = task instanceof Epic ? "EPIC" : (task instanceof SubTask ? "SUBTASK" : "TASK");
-            String epicId = task instanceof SubTask ? String.valueOf(((SubTask) task).getEpicId()) : "";
+        String type = task instanceof Epic ? "EPIC" : (task instanceof SubTask ? "SUBTASK" : "TASK");
+        String epicId = task instanceof SubTask ? String.valueOf(((SubTask) task).getEpicId()) : "";
 
-            return String.format("%d,%s,%s,%s,%s,%s,%s,%s,%s",
-                    task.getId(),
-                    type,
-                    task.getName(),
-                    task.getDescription(),
-                    task.getStatus(),
-                    task.getStartTime() != null ? task.getStartTime().toString() : "",
-                    task.getDuration() != null ? task.getDuration().toString() : "",
-                    task.getEndTime() != null ? task.getEndTime().toString() : "",
-                    epicId
-            );
+        return String.format("%d,%s,%s,%s,%s,%s,%s,%s,%s",
+                task.getId(),
+                type,
+                task.getName(),
+                task.getDescription(),
+                task.getStatus(),
+                task.getStartTime() != null ? task.getStartTime().toString() : "",
+                task.getDuration() != null ? task.getDuration().toString() : "",
+                task.getEndTime() != null ? task.getEndTime().toString() : "",
+                epicId
+        );
     }
 
     private Task fromCSV(String[] fields) {
@@ -131,25 +131,27 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             int id = Integer.parseInt(fields[0]);
             TaskType type = TaskType.valueOf(fields[1].toUpperCase());
             String name = fields[2];
-            Status status = Status.valueOf(fields[3]);
-            String description = fields[4];
-            Duration duration = fields[5].isEmpty() ? Duration.ZERO : Duration.parse(fields[5]);
-            LocalDateTime startTime = fields[6].isEmpty() ? null : LocalDateTime.parse(fields[6]);
+            String description = fields[3];
+            Status status = Status.valueOf(fields[4].toUpperCase());
+            LocalDateTime startTime = fields[5].isEmpty() ? null : LocalDateTime.parse(fields[5]);
+            Duration duration = fields[6].isEmpty() ? Duration.ZERO : Duration.parse(fields[6]);
+
             switch (type) {
                 case TASK:
-                    return new Task(id, name, description,status,startTime, duration);
+                    return new Task(id, name, description, status, startTime, duration);
                 case EPIC:
-                    return new Epic(id, name, description);
+                    return new Epic(id, name, description, status, startTime, duration);
                 case SUBTASK:
                     int epicId = Integer.parseInt(fields[7]);
-                    return new SubTask(id, name, description, startTime, duration, epicId);
+                    return new SubTask(id, name, description, status, startTime, duration, epicId);
                 default:
                     throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
             }
         } catch (Exception e) {
-            throw new ManagerSaveException("Ошибка с разбором строки CSV: " + String.join(",", fields), e);
+            throw new ManagerSaveException("Ошибка при разборе строки CSV: " + String.join(",", fields), e);
         }
     }
+
 
     public static FileBackedTaskManager loadFromFile(File file) {
         FileBackedTaskManager manager = new FileBackedTaskManager(file);

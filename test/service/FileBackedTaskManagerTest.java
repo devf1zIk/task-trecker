@@ -2,6 +2,7 @@ package service;
 
 import exception.ManagerSaveException;
 import model.Epic;
+import model.SubTask;
 import model.Task;
 import model.enums.Status;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +34,7 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
 
     @Test
     void shouldSaveAndLoadTaskFromFile() {
-        Task task = new Task(7,"taskname","descr",Status.NEW,LocalDateTime.of(2014,2,4,5,7,8),Duration.ofMinutes(4));
+        Task task = new Task(7,"taskname","descr",Status.NEW,LocalDateTime.of(2013,4,5,6,7,8),Duration.ofMinutes(4));
         System.out.println(task);
         taskManager.addTask(task);
 
@@ -50,22 +51,38 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
     }
 
 
+
     @Test
-    void shouldSaveAndLoadEpicFromFile() {
-        Epic epic = new Epic(1, "Epic 1", "Description 1", Status.NEW, Duration.ZERO);
-        taskManager.addEpic(epic);
+    void shouldCalculateEndTimeBasedOnLatestSubtask() {
+
+        Epic epic1 = new Epic(1, "Epic 1", "Description 1", Status.NEW, LocalDateTime.of(2015, 4, 5, 6, 7, 8), Duration.ofMinutes(3));
+        taskManager.addEpic(epic1);
+
+        System.out.println(epic1);
+        System.out.println(epic1.getId());
+        SubTask subTask1 = new SubTask(2, "Subtask 1", "Description 1", Status.NEW, LocalDateTime.of(2024, 12, 1, 10, 0), Duration.ofMinutes(30), epic1.getId());
+        SubTask subTask2 = new SubTask(3, "Subtask 2", "Description 2", Status.NEW, LocalDateTime.of(2024, 12, 1, 11, 0), Duration.ofMinutes(45), epic1.getId());
+        System.out.println(epic1.getId());
+        taskManager.addSubtask(subTask1);
+        taskManager.addSubtask(subTask2);
+
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
-        Epic loadedEpic = loadedManager.getEpic(epic.getId());
 
-        assertEquals(epic.getId(), loadedEpic.getId(), "ID эпика должен совпадать.");
-        assertEquals(epic.getName(), loadedEpic.getName(), "Имя эпика должно совпадать.");
-        assertEquals(epic.getDescription(), loadedEpic.getDescription(), "Описание эпика должно совпадать.");
-        assertEquals(Status.NEW, loadedEpic.getStatus(), "Статус эпика должен совпадать.");
-        assertNull(loadedEpic.getStartTime(), "Начальное время эпика должно быть null.");
-        assertNull(loadedEpic.getEndTime(), "Конечное время эпика должно быть null.");
-        assertEquals(Duration.ZERO, loadedEpic.getDuration(), "Длительность эпика должна быть 0.");
+        Epic loadedEpic = loadedManager.getEpic(epic1.getId());
+        assertNotNull(loadedEpic, "Эпик не был восстановлен!");
+
+        assertEquals(2, loadedEpic.getSubTasks().size(), "Количество подзадач не совпадает.");
+        assertTrue(loadedEpic.getSubTasks().contains(subTask1.getId()), "Подзадача 1 не восстановлена.");
+        assertTrue(loadedEpic.getSubTasks().contains(subTask2.getId()), "Подзадача 2 не восстановлена.");
+
+        loadedManager.updateEpicTimeAndDuration(loadedEpic);
+
+        assertEquals(LocalDateTime.of(2024, 12, 1, 11, 45), loadedEpic.getEndTime(), "Время завершения эпика должно быть основано на самой поздней подзадаче.");
     }
+
+
+
 
 
     @Test

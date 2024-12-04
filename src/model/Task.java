@@ -49,8 +49,6 @@ public class Task {
         this.name = name;
         this.description = description;
         this.status = status;
-        this.duration = Duration.ZERO;
-        this.startTime = null;
     }
 
     public int getId() {
@@ -97,8 +95,8 @@ public class Task {
         return startTime;
     }
 
-    public void setStartTime(LocalDateTime deadline) {
-        this.startTime = deadline;
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
     }
 
     public LocalDateTime getEndTime() {

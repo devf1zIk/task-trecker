@@ -71,7 +71,6 @@ public class InMemoryTaskManager implements TaskManager {
         task.setId(++id);
         tasks.put(task.getId(), task);
         prioritizedTasks.add(task);
-        historyManager.add(task);
     }
 
     @Override
@@ -302,23 +301,16 @@ public class InMemoryTaskManager implements TaskManager {
         });
     }
 
-    private void updateEpicTimeAndDuration(Epic epic) {
-        LocalDateTime earliestStart = null;
-        Duration totalDuration = Duration.ZERO;
+    public void updateEpicTimeAndDuration(Epic epic) {
+        Optional<LocalDateTime> latestEndTime = epic.getSubTasks().stream()
+                .map(this::getSubtask)
+                .map(SubTask::getEndTime)
+                .max(LocalDateTime::compareTo);
 
-        for (Integer subTaskId : epic.getSubTasks()) {
-            SubTask subTask = subtasks.get(subTaskId);
-
-            if (subTask != null) {
-                if (earliestStart == null || subTask.getStartTime().isBefore(earliestStart)) {
-                    earliestStart = subTask.getStartTime();
-                }
-                totalDuration = totalDuration.plus(subTask.getDuration());
-            }
-        }
-
-        epic.setStartTime(earliestStart);
-        epic.setDuration(totalDuration);
+        latestEndTime.ifPresent(epic::setEndTime);
     }
+
+
+
 
 }
