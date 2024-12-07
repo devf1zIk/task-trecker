@@ -153,47 +153,44 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
     }
 
-
     public static FileBackedTaskManager loadFromFile(File file) {
         FileBackedTaskManager manager = new FileBackedTaskManager(file);
         int maxId = 0;
-        try {
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             List<String> lines = Files.readAllLines(file.toPath());
             if (lines.isEmpty()) {
                 return manager;
             }
             for (String line : lines.subList(1, lines.size())) {
                 if (line.isBlank()) continue;
-                try {
-                    String[] fields = line.split(",");
-                    Task task = manager.fromCSV(fields);
 
-                    if (task.getId() > maxId) {
-                        maxId = task.getId();
-                    }
+                String[] fields = line.split(",");
+                Task task = manager.fromCSV(fields);
 
-                    if (task instanceof Epic) {
-                        manager.epics.put(task.getId(), (Epic) task);
-                    } else if (task instanceof SubTask) {
-                        manager.subtasks.put(task.getId(), (SubTask) task);
-                        Epic epic = manager.epics.get(((SubTask) task).getEpicId());
-                        if (epic != null) {
-                            epic.addSubTask(task.getId());
-                        }
-                    } else {
-                        manager.tasks.put(task.getId(), task);
-                    }
+                maxId = Math.max(maxId, task.getId());
+
+                if (task instanceof Epic epic) {
+                    manager.epics.put(task.getId(), epic);
                     manager.prioritizedTasks.add(task);
-                    System.out.println(manager.prioritizedTasks.add(task));
-                } catch (Exception e) {
-                    throw new ManagerSaveException("Ошибка при разборе строки: " + line, e);
+                } else if (task instanceof SubTask subtask) {
+                    manager.subtasks.put(task.getId(), subtask);
+                    Epic parentEpic = manager.epics.get(subtask.getEpicId());
+                    if (parentEpic != null) {
+                        parentEpic.addSubTask(task.getId());
+                    }
+                    manager.prioritizedTasks.add(subtask);
+                } else {
+                    manager.tasks.put(task.getId(), task);
+                    manager.prioritizedTasks.add(task);
                 }
             }
+            manager.id = maxId + 1;
+            return manager;
         } catch (IOException e) {
             throw new ManagerSaveException("Ошибка при загрузке из файла: " + file.getName(), e);
         }
-
-        manager.id = maxId + 1;
-        return manager;
     }
+
+
 }

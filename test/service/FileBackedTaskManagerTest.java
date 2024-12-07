@@ -55,12 +55,12 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         LocalDateTime endTime = startTime.plus(duration);
         Epic epic1 = new Epic(1, "Epic 1", "Description 1", Status.NEW, startTime, duration,endTime);
         taskManager.addEpic(epic1);
-
-        System.out.println(epic1);
+        
+        SubTask subTask1 = new SubTask(2, "Subtask 1", "Description 1", Status.DONE, LocalDateTime.of(2024, 12, 1, 10, 0), Duration.ofMinutes(30), epic1.getId());
+        SubTask subTask2 = new SubTask(3, "Subtask 2", "Description 2", Status.IN_PROGRESS, LocalDateTime.of(2024, 12, 1, 11, 0), Duration.ofMinutes(45), epic1.getId());
         System.out.println(epic1.getId());
-        SubTask subTask1 = new SubTask(2, "Subtask 1", "Description 1", Status.NEW, LocalDateTime.of(2024, 12, 1, 10, 0), Duration.ofMinutes(30), epic1.getId());
-        SubTask subTask2 = new SubTask(3, "Subtask 2", "Description 2", Status.NEW, LocalDateTime.of(2024, 12, 1, 11, 0), Duration.ofMinutes(45), epic1.getId());
-        System.out.println(epic1.getId());
+        System.out.println(subTask1);
+        System.out.println(subTask2);
         taskManager.addSubtask(subTask1);
         taskManager.addSubtask(subTask2);
 
@@ -99,10 +99,12 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         taskManager.addEpic(epic);
         System.out.println(epic);
 
-        SubTask subTask1 = new SubTask(2, "Subtask 1", "Description 1", Status.NEW, LocalDateTime.of(2024, 12, 1, 10, 0), Duration.ofMinutes(30), epic.getId());
-        SubTask subTask2 = new SubTask(3, "Subtask 2", "Description 2", Status.NEW, LocalDateTime.of(2024, 12, 1, 11, 0), Duration.ofMinutes(45), epic.getId());
+        SubTask subTask1 = new SubTask(2, "Subtask 1", "Description 1", Status.DONE, LocalDateTime.of(2024, 12, 1, 10, 0), Duration.ofMinutes(30), epic.getId());
+        SubTask subTask2 = new SubTask(3, "Subtask 2", "Description 2", Status.IN_PROGRESS, LocalDateTime.of(2024, 12, 1, 11, 0), Duration.ofMinutes(45), epic.getId());
         taskManager.addSubtask(subTask1);
+        System.out.println(subTask1);
         taskManager.addSubtask(subTask2);
+        System.out.println(subTask2);
 
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
@@ -138,15 +140,18 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         Duration duration = Duration.ofMinutes(60);
         LocalDateTime endTime = startTime.plus(duration);
 
-
-        Epic epic = new Epic(1, "Epic 1", "Description 1", Status.NEW, startTime, duration,endTime);
+        Epic epic = new Epic(9, "Epic 1", "Description 1", Status.NEW, startTime, duration, endTime);
         taskManager.addEpic(epic);
+        System.out.println(epic);
 
-        SubTask subTask1 = new SubTask(2, "Subtask 1", "Description 1", Status.NEW, LocalDateTime.of(2024, 12, 1, 10, 0), Duration.ofMinutes(30), epic.getId());
-        SubTask subTask2 = new SubTask(3, "Subtask 2", "Description 2", Status.NEW, LocalDateTime.of(2024, 12, 1, 11, 0), Duration.ofMinutes(45), epic.getId());
+        SubTask subTask1 = new SubTask(2, "Subtask 1", "Description 1", Status.DONE,
+                LocalDateTime.of(2024, 12, 1, 10, 0), Duration.ofMinutes(30), epic.getId());
+        SubTask subTask2 = new SubTask(3, "Subtask 2", "Description 2", Status.IN_PROGRESS,
+                LocalDateTime.of(2024, 12, 1, 11, 0), Duration.ofMinutes(45), epic.getId());
         taskManager.addSubtask(subTask1);
+        System.out.println(subTask1);
         taskManager.addSubtask(subTask2);
-
+        System.out.println(subTask2);
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
 
@@ -161,6 +166,10 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
 
         assertEquals(subTask1, loadedSubtasks.get(0), "Первая подзадача должна быть subTask1");
         assertEquals(subTask2, loadedSubtasks.get(1), "Вторая подзадача должна быть subTask2");
+
+        Status expectedEpicStatus = Status.IN_PROGRESS;
+        assertEquals(expectedEpicStatus, loadedEpic.getStatus(),
+                "Статус эпика должен обновляться в зависимости от статусов подзадач.");
     }
 
 }

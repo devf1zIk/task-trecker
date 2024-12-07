@@ -302,7 +302,6 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     public void updateEpicTimeAndDuration(Epic epic) {
-
         Duration duration = Duration.ZERO;
         LocalDateTime startTime = null;
         LocalDateTime endTime = null;
