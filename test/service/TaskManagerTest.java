@@ -12,8 +12,6 @@ import service.managers.TaskManager;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class TaskManagerTest<T extends TaskManager> {
@@ -42,7 +40,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         taskManager.addEpic(epic);
 
         Epic retrievedEpic = taskManager.getEpic(epic.getId());
-        assertEquals("Добавленный эпик должен быть доступен по ID.", epic, retrievedEpic);
+        Assertions.assertEquals(epic, retrievedEpic, "Добавленный эпик должен быть доступен по ID.");
     }
 
     @Test
@@ -54,7 +52,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         taskManager.addSubtask(subtask);
 
         SubTask retrievedSubtask = taskManager.getSubtask(subtask.getId());
-        assertEquals("Добавленная подзадача должна быть доступна по ID.", subtask, retrievedSubtask);
+        Assertions.assertEquals(subtask, retrievedSubtask, "Добавленная подзадача должна быть доступна по ID.");
 
         List<SubTask> subtasks = taskManager.getSubtasksOfEpic(epic.getId());
         assertTrue(subtasks.contains(subtask), "Подзадача должна быть связана с эпиком.");

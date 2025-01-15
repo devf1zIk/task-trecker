@@ -111,7 +111,6 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-
     @Override
     public void updateEpic(Epic epic) {
         if (epics.containsKey(epic.getId())) {
@@ -123,7 +122,6 @@ public class InMemoryTaskManager implements TaskManager {
             throw new ValidationException("Epic with ID " + epic.getId() + " not found.");
         }
     }
-
 
     @Override
     public void updateSubtask(SubTask subtask) {
@@ -306,13 +304,9 @@ public class InMemoryTaskManager implements TaskManager {
         LocalDateTime startTime = null;
         LocalDateTime endTime = null;
 
-        for (Integer subTaskId : epic.getSubTasks()) {
-            SubTask subTask = getSubtask(subTaskId);
-
-            if (subTask.getDuration() != null) {
-                duration = duration.plus(subTask.getDuration());
-            }
-            if (subTask.getStartTime() != null) {
+        for(Integer subtaskId : epic.getSubTasks()){
+            SubTask subTask = subtasks.get(subtaskId);
+            if (subTask.getStartTime() != null && subTask.getEndTime() != null) {
                 if (startTime == null || subTask.getStartTime().isBefore(startTime)) {
                     startTime = subTask.getStartTime();
                 }
@@ -321,13 +315,13 @@ public class InMemoryTaskManager implements TaskManager {
                 }
             }
         }
+        if (startTime != null && endTime != null) {
+            duration = Duration.between(startTime, endTime);
+        }
 
         epic.setStartTime(startTime);
         epic.setDuration(duration);
         epic.setEndTime(endTime);
     }
-
-
-
 
 }

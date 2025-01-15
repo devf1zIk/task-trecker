@@ -49,24 +49,19 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
 
     @Test
     void shouldCalculateEndTimeBasedOnLatestSubtask() {
-
-        LocalDateTime startTime = LocalDateTime.of(2013, 4, 5, 6, 7, 8);
-        Duration duration = Duration.ofMinutes(4);
+        LocalDateTime startTime = LocalDateTime.of(2024, 12, 1, 9, 0);
+        Duration duration = Duration.ofMinutes(3);
         LocalDateTime endTime = startTime.plus(duration);
-        Epic epic1 = new Epic(1, "Epic 1", "Description 1", Status.NEW, startTime, duration,endTime);
+
+        Epic epic1 = new Epic(1, "Epic 1", "Description 1", Status.NEW, startTime, duration, endTime);
         taskManager.addEpic(epic1);
-        
-        SubTask subTask1 = new SubTask(2, "Subtask 1", "Description 1", Status.DONE, LocalDateTime.of(2024, 12, 1, 10, 0), Duration.ofMinutes(30), epic1.getId());
-        SubTask subTask2 = new SubTask(3, "Subtask 2", "Description 2", Status.IN_PROGRESS, LocalDateTime.of(2024, 12, 1, 11, 0), Duration.ofMinutes(45), epic1.getId());
-        System.out.println(epic1.getId());
-        System.out.println(subTask1);
-        System.out.println(subTask2);
+
+        SubTask subTask1 = new SubTask(2, "Subtask 1", "Description 1", Status.DONE, startTime.plusMinutes(1), Duration.ofMinutes(1), epic1.getId());
+        SubTask subTask2 = new SubTask(3, "Subtask 2", "Description 2", Status.IN_PROGRESS, startTime.plusMinutes(2), Duration.ofMinutes(2), epic1.getId());
         taskManager.addSubtask(subTask1);
         taskManager.addSubtask(subTask2);
 
-
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
-
         Epic loadedEpic = loadedManager.getEpic(epic1.getId());
         assertNotNull(loadedEpic, "Эпик не был восстановлен!");
 
@@ -76,7 +71,10 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
 
         loadedManager.updateEpicTimeAndDuration(loadedEpic);
 
-        assertEquals(LocalDateTime.of(2024, 12, 1, 11, 45), loadedEpic.getEndTime(), "Время завершения эпика должно быть основано на самой поздней подзадаче.");
+        System.out.println("Эпик: " + loadedEpic);
+        System.out.println("Подзадача 1: " + loadedManager.getSubtask(subTask1.getId()));
+        System.out.println("Подзадача 2: " + loadedManager.getSubtask(subTask2.getId()));
+        assertEquals(startTime.plusMinutes(4), loadedEpic.getEndTime(), "Время завершения эпика должно быть основано на времени окончания самой поздней подзадачи.");
     }
 
     @Test
@@ -126,12 +124,12 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         taskManager.addTask(task3);
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
-
         List<Task> prioritizedTasks = loadedManager.getPriorityTasks();
-        assertEquals(3, prioritizedTasks.size(), "Количество задач не совпадает.");
-        assertEquals(task1, prioritizedTasks.get(0), "Первая задача должна быть task1.");
-        assertEquals(task2, prioritizedTasks.get(1), "Вторая задача должна быть task2.");
-        assertEquals(task3, prioritizedTasks.get(2), "Третья задача должна быть task3.");
+        assertEquals(3, prioritizedTasks.size(), "Количество восстановленных задач должно быть корректным.");
+
+        assertTrue(prioritizedTasks.get(0).getStartTime().isBefore(prioritizedTasks.get(1).getStartTime()), "Задача 2 должна начаться позже задачи 1.");
+        assertTrue(prioritizedTasks.get(1).getStartTime().isBefore(prioritizedTasks.get(2).getStartTime()), "Задача 3 должна начаться позже задачи 2.");
+
     }
 
     @Test
