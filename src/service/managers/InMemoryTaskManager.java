@@ -313,7 +313,10 @@ public class InMemoryTaskManager implements TaskManager {
                     endTime = subTask.getEndTime();
                 }
             }
-            duration = duration.plus(Duration.between(subTask.getStartTime(),subTask.getEndTime()));
+            if (subTask.getDuration() != null) {
+                duration = duration.plus(subTask.getDuration());
+            }
+
 
         }
 
