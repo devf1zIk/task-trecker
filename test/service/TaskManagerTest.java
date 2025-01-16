@@ -48,7 +48,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         Epic epic = new Epic(4,"Epic 1", "Description 1",Status.NEW,Duration.ofMinutes(1));
         taskManager.addEpic(epic);
 
-        SubTask subtask = new SubTask(5,"SubTask 1", "Description 1", Status.NEW,LocalDateTime.of(2016,4,5,6,7,8), Duration.ofMinutes(1), epic.getId());
+        SubTask subtask = new SubTask(5,"SubTask 1", "Description 1", Status.IN_PROGRESS,LocalDateTime.of(2016,4,5,6,7,8), Duration.ofMinutes(1), epic.getId());
         taskManager.addSubtask(subtask);
 
         SubTask retrievedSubtask = taskManager.getSubtask(subtask.getId());
@@ -85,7 +85,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         Epic epic = new Epic(3,"Epic 1", "Description 1",Status.NEW,Duration.ofMinutes(1));
         taskManager.addEpic(epic);
 
-        SubTask subtask = new SubTask(4,"SubTask 1", "Description 1",Status.NEW, LocalDateTime.of(2004,3,3,3,3,3), Duration.ofMinutes(1), epic.getId());
+        SubTask subtask = new SubTask(4,"SubTask 1", "Description 1",Status.IN_PROGRESS, LocalDateTime.of(2004,3,3,3,3,3), Duration.ofMinutes(1), epic.getId());
         taskManager.addSubtask(subtask);
 
         taskManager.removeEpic(epic.getId());
@@ -98,8 +98,8 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         Epic epic = new Epic(1,"Epic 1", "Description 1", Status.NEW, Duration.ofMinutes(1));
         taskManager.addEpic(epic);
 
-        SubTask subtask1 = new SubTask(2,"SubTask 1", "Description 1", Status.NEW, LocalDateTime.of(1990, 12, 4, 5, 6, 7), Duration.ofMinutes(1), epic.getId());
-        SubTask subtask2 = new SubTask(3,"SubTask 2", "Description 2", Status.NEW, LocalDateTime.of(2001, 5, 6, 7, 8, 9), Duration.ofMinutes(2), epic.getId());
+        SubTask subtask1 = new SubTask(2,"SubTask 1", "Description 1", Status.IN_PROGRESS, LocalDateTime.of(1990, 12, 4, 5, 6, 7), Duration.ofMinutes(1), epic.getId());
+        SubTask subtask2 = new SubTask(3,"SubTask 2", "Description 2", Status.DONE, LocalDateTime.of(2001, 5, 6, 7, 8, 9), Duration.ofMinutes(2), epic.getId());
         taskManager.addSubtask(subtask1);
         taskManager.addSubtask(subtask2);
 
@@ -142,7 +142,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         Epic epic = new Epic(3,"Epic 1", "Description 1", Status.NEW, Duration.ofMinutes(1));
         taskManager.addEpic(epic);
 
-        SubTask subtask = new SubTask(4,"SubTask 1", "Description 1", Status.NEW, LocalDateTime.of(2004,3,3,3,3,3), Duration.ofMinutes(1), epic.getId());
+        SubTask subtask = new SubTask(4,"SubTask 1", "Description 1", Status.IN_PROGRESS, LocalDateTime.of(2004,3,3,3,3,3), Duration.ofMinutes(1), epic.getId());
         taskManager.addSubtask(subtask);
 
         taskManager.removeEpic(epic.getId());

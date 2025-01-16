@@ -117,7 +117,6 @@ public class InMemoryTaskManager implements TaskManager {
             Epic savedEpic = epics.get(epic.getId());
             savedEpic.setName(epic.getName());
             savedEpic.setDescription(epic.getDescription());
-            updateEpicTimeAndDuration(savedEpic);
         } else {
             throw new ValidationException("Epic with ID " + epic.getId() + " not found.");
         }
@@ -299,7 +298,7 @@ public class InMemoryTaskManager implements TaskManager {
         });
     }
 
-    public void updateEpicTimeAndDuration(Epic epic) {
+    private void updateEpicTimeAndDuration(Epic epic) {
         Duration duration = Duration.ZERO;
         LocalDateTime startTime = null;
         LocalDateTime endTime = null;
@@ -314,9 +313,8 @@ public class InMemoryTaskManager implements TaskManager {
                     endTime = subTask.getEndTime();
                 }
             }
-        }
-        if (startTime != null && endTime != null) {
-            duration = Duration.between(startTime, endTime);
+            duration = duration.plus(Duration.between(subTask.getStartTime(),subTask.getEndTime()));
+
         }
 
         epic.setStartTime(startTime);
