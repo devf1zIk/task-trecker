@@ -5,9 +5,9 @@ import java.nio.charset.StandardCharsets;
 
 public class BaseHttpHandler {
 
-    private final String NotFound = "Not Found";
-    private final String BadRequest = "Bad Request";
-    private final String NotAccess = "Not Access";
+    private final String notFound = "Not Found";
+    private final String badRequest = "Bad Request";
+    private final String notAccess = "Not Access";
 
     protected void sendText(final HttpExchange exchange, final String text) throws IOException {
         byte[] resp = text.getBytes(StandardCharsets.UTF_8);
@@ -28,7 +28,7 @@ public class BaseHttpHandler {
     }
 
     protected void sendBadRequest(final HttpExchange exchange) throws IOException {
-        byte[] resp = BadRequest.getBytes(StandardCharsets.UTF_8);
+        byte[] resp = badRequest.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
         exchange.sendResponseHeaders(400, resp.length);
         exchange.getResponseBody().write(resp);
@@ -37,7 +37,7 @@ public class BaseHttpHandler {
     }
 
     protected void sendNotFound(final HttpExchange exchange) throws IOException {
-        byte[] resp = NotFound.getBytes(StandardCharsets.UTF_8);
+        byte[] resp = notFound.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
         exchange.sendResponseHeaders(404, resp.length);
         exchange.getResponseBody().write(resp);
@@ -46,7 +46,7 @@ public class BaseHttpHandler {
     }
 
     protected void sendHasInteraction(final HttpExchange exchange) throws IOException {
-        byte[] resp = NotAccess.getBytes(StandardCharsets.UTF_8);
+        byte[] resp = notAccess.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
         exchange.sendResponseHeaders(406, resp.length);
         exchange.getResponseBody().write(resp);
