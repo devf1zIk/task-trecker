@@ -1,12 +1,10 @@
 package service.handlers;
-
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import model.Task;
 import service.Managers;
 import service.managers.TaskManager;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
