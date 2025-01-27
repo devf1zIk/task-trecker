@@ -10,6 +10,7 @@ import java.util.Optional;
 public class LocalDateTimeAdapter extends TypeAdapter<LocalDateTime> {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
     @Override
     public void write(final JsonWriter jsonWriter, final LocalDateTime localDateTime) throws IOException {
         Optional<LocalDateTime> localDateTimeOptional = Optional.ofNullable(localDateTime);
