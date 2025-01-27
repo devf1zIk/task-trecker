@@ -24,7 +24,7 @@ public class PrioritizedHandler extends BaseHttpHandler implements HttpHandler {
             switch (request) {
                 case "GET":
                     String path = exchange.getRequestURI().getPath();
-                    if(path.equals("/api/prioritized")) {
+                    if (path.equals("/api/prioritized")) {
                         String response = gson.toJson(taskManager.getPriorityTasks());
                         sendText(exchange, response);
                     }
