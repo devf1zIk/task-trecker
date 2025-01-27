@@ -21,7 +21,7 @@ public class HistoryHandler extends BaseHttpHandler implements HttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
         try (exchange) {
             String request = exchange.getRequestMethod();
-            switch (request){
+            switch (request) {
                 case "GET":
                     String path = exchange.getRequestURI().getPath();
                     if (path.equals("/api/history")) {
