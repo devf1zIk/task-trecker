@@ -15,13 +15,13 @@ public class SubTaskHandler extends BaseHttpHandler implements HttpHandler {
     private final TaskManager taskManager;
     private final Gson gson;
 
-    public SubTaskHandler (TaskManager taskManager) {
+    public SubTaskHandler(TaskManager taskManager) {
         this.taskManager = taskManager;
         gson = Managers.getGson();
     }
 
     @Override
-    public void handle (HttpExchange exchange) throws IOException {
+    public void handle(HttpExchange exchange) throws IOException {
         try (exchange) {
             String request = exchange.getRequestMethod();
             String path = exchange.getRequestURI().getPath();
