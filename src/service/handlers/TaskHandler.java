@@ -27,7 +27,7 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
         try (exchange) {
             String request = exchange.getRequestMethod();
             String path = exchange.getRequestURI().getPath();
-            switch (request){
+            switch (request) {
                 case "GET":
                     if (Pattern.matches("/api/tasks", path)) {
                         String response = gson.toJson(taskManager.getAllTasks());
