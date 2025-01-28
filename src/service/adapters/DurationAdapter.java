@@ -9,7 +9,7 @@ public class DurationAdapter extends TypeAdapter<Duration> {
     @Override
     public void write(final JsonWriter jsonWriter, final Duration duration) throws IOException {
         if (duration != null) {
-            jsonWriter.value(duration.getSeconds());
+            jsonWriter.value(duration.toString());
         } else {
             jsonWriter.nullValue();
         }
@@ -17,6 +17,14 @@ public class DurationAdapter extends TypeAdapter<Duration> {
 
     @Override
     public Duration read(final JsonReader jsonReader) throws IOException {
-        return Duration.ofSeconds(jsonReader.nextInt());
+        String durationString = jsonReader.nextString();
+        if (durationString == null || durationString.equals("null")) {
+            return null;
+        }
+        try {
+            return Duration.parse(durationString);
+        } catch (Exception e) {
+            throw new IOException("Invalid duration format: " + durationString, e);
+        }
     }
 }

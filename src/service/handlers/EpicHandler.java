@@ -1,16 +1,14 @@
 package service.handlers;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import model.Epic;
 import service.Managers;
 import service.managers.TaskManager;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
-public class EpicHandler extends BaseHttpHandler implements HttpHandler {
+public class EpicHandler extends BaseHttpHandler {
 
     private final TaskManager taskManager;
     private final Gson gson;
@@ -25,81 +23,99 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
         try (exchange) {
             String request = exchange.getRequestMethod();
             String path = exchange.getRequestURI().getPath();
+            String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
 
             switch (request) {
                 case "GET":
-                    if (Pattern.matches("/api/epics/\\d + /subtasks", path)) {
-                        String repath = path.replaceFirst("/api/epics/", "").replaceFirst("/subtasks","");
+                    if (Pattern.matches("/api/epics/\\d+/subtasks", path)) {
+                        String repath = path.replaceFirst("/api/epics/", "").replaceFirst("/subtasks", "");
                         int id = parseInt(repath);
                         if (taskManager.getEpic(id) != null) {
                             String response = gson.toJson(taskManager.getSubtasksOfEpic(id));
                             sendText(exchange, response);
-                            return;
                         } else {
                             sendNotFound(exchange);
-                            return;
                         }
-                    } else if (Pattern.matches("/api/epics", path)) {
+                    } else if ("/api/epics".equals(path)) {
                         String response = gson.toJson(taskManager.getAllEpics());
                         sendText(exchange, response);
-                        return;
-                    } else if (Pattern.matches("/api/epics/\\d", path)) {
+                    } else if (Pattern.matches("/api/epics/\\d+", path)) {
                         String repath = path.replaceFirst("/api/epics/", "");
                         int id = parseInt(repath);
                         if (taskManager.getEpic(id) != null) {
                             String response = gson.toJson(taskManager.getEpic(id));
                             sendText(exchange, response);
-                            return;
                         } else {
                             sendNotFound(exchange);
-                            return;
                         }
+                    } else {
+                        sendNotFound(exchange);
                     }
                     break;
                 case "POST":
-                    if (Pattern.matches("/api/epics/", path)) {
-                        InputStream inputStream = exchange.getRequestBody();
-                        String body = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-                        Epic epic = gson.fromJson(body, Epic.class);
-                        taskManager.addEpic(epic);
-                        exchange.sendResponseHeaders(201, 0);
-                        return;
-                    } else if (Pattern.matches("/api/epics/\\d", path)) {
+                    if (Pattern.matches("/api/epics", path)) {
+                        if (body.isBlank()) {
+                            sendBadRequest(exchange);
+                            return;
+                        }
+                        try {
+                            Epic epic = gson.fromJson(body, Epic.class);
+                            if (epic == null) {
+                                sendBadRequest(exchange);
+                                return;
+                            }
+                            taskManager.addEpic(epic);
+                            exchange.sendResponseHeaders(201, 0);
+                        } catch (Exception e) {
+                            sendInternalServerError(exchange, e.getMessage());
+                        }
+                    } else if (Pattern.matches("/api/epics/\\d+", path)) {
                         String repath = path.replaceFirst("/api/epics/", "");
                         int id = parseInt(repath);
                         if (taskManager.getEpic(id) != null) {
-                            InputStream inputStream = exchange.getRequestBody();
-                            String body = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-                            Epic epic = gson.fromJson(body, Epic.class);
-                            taskManager.updateEpic(epic);
-                            exchange.sendResponseHeaders(201, 0);
-                            return;
+                            if (body.isBlank()) {
+                                sendBadRequest(exchange);
+                                return;
+                            }
+                            try {
+                                Epic epic = gson.fromJson(body, Epic.class);
+                                if (epic.getId() != id) {
+                                    sendBadRequest(exchange);
+                                    return;
+                                }
+                                if (taskManager.getEpic(id) != null) {
+                                    taskManager.updateEpic(epic);
+                                }
+                                exchange.sendResponseHeaders(200, 0);
+                            } catch (Exception e) {
+                                sendBadRequest(exchange);
+                            }
                         } else {
+                            sendNotFound(exchange);
+                        }
+                    } else {
                         sendNotFound(exchange);
-                        return;
                     }
-                }
                     break;
+
                 case "DELETE":
-                    if (Pattern.matches("/api/epics", path)) {
+                    if ("/api/epics".equals(path)) {
                         taskManager.deleteAllEpics();
                         exchange.sendResponseHeaders(200, 0);
-                        return;
-                    } else if (Pattern.matches("/api/epics/\\d", path)) {
+                    } else if (Pattern.matches("/api/epics/\\d+", path)) {
                         String repath = path.replaceFirst("/api/epics/", "");
                         int id = parseInt(repath);
                         if (taskManager.getEpic(id) != null) {
                             taskManager.removeEpic(id);
-                            exchange.sendResponseHeaders(201, 0);
-                            return;
+                            exchange.sendResponseHeaders(200, 0);
                         } else {
                             sendNotFound(exchange);
-                            return;
                         }
+                    } else {
+                        sendNotFound(exchange);
                     }
                     break;
                 default:
-                    System.out.println("Сервер с методами ошибка, такой метод нету" + request);
                     exchange.sendResponseHeaders(405, 0);
             }
         }

@@ -1,7 +1,6 @@
 package service.handlers;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import model.Task;
 import service.Managers;
 import service.managers.TaskManager;
@@ -10,7 +9,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
-public class TaskHandler extends BaseHttpHandler implements HttpHandler {
+public class TaskHandler extends BaseHttpHandler {
 
     private final TaskManager taskManager;
     private final Gson gson;
@@ -25,16 +24,18 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
         try (exchange) {
             String request = exchange.getRequestMethod();
             String path = exchange.getRequestURI().getPath();
+            InputStream inputStream = exchange.getRequestBody();
+            String body = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
             switch (request) {
                 case "GET":
-                    if (Pattern.matches("/api/tasks", path)) {
+                    if (Pattern.matches("/api/tasks$", path)) {
                         String response = gson.toJson(taskManager.getAllTasks());
                         sendText(exchange, response);
                         return;
                     } else if (Pattern.matches("/api/tasks/\\d+$", path)) {
                         String repath = path.replaceFirst("/api/tasks/", "");
                         int id = parseInt(repath);
-                        if (taskManager.getSubtask(id) != null) {
+                        if (taskManager.getTask(id) != null) {
                             String response = gson.toJson(taskManager.getTask(id));
                             sendText(exchange, response);
                             return;
@@ -48,20 +49,32 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
                         return;
                     }
                 case "POST":
-                    if (Pattern.matches("/api/tasks", path)) {
-                        InputStream inputStream = exchange.getRequestBody();
-                        String body = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+                    if (Pattern.matches("/api/tasks$", path)) {
+                        if (body.isBlank()) {
+                            sendBadRequest(exchange);
+                            return;
+                        }
                         Task task = gson.fromJson(body, Task.class);
+                        if (task == null) {
+                            sendBadRequest(exchange);
+                            return;
+                        }
                         taskManager.addTask(task);
                         exchange.sendResponseHeaders(201,0);
                         return;
-                    } else if (Pattern.matches("/api/tasks/\\d + $", path)) {
+                    } else if (Pattern.matches("/api/tasks/\\d+$", path)) {
                         String repath = path.replaceFirst("/api/tasks/", "");
                         int id = parseInt(repath);
                         if (taskManager.getTask(id) != null) {
-                            InputStream inputStream = exchange.getRequestBody();
-                            String body = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+                            if (body.isBlank()) {
+                                sendBadRequest(exchange);
+                                return;
+                            }
                             Task task = gson.fromJson(body, Task.class);
+                            if (task == null) {
+                                sendBadRequest(exchange);
+                                return;
+                            }
                             taskManager.updateTask(task);
                             exchange.sendResponseHeaders(201,0);
                             return;
@@ -98,5 +111,4 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
             sendInternalServerError(exchange,response);
         }
     }
-
 }

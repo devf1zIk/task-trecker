@@ -1,13 +1,13 @@
 package service.handlers;
 import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-public class BaseHttpHandler {
+public abstract class BaseHttpHandler implements HttpHandler {
 
-    private final String notFound = "Not Found";
-    private final String badRequest = "Bad Request";
-    private final String notAccess = "Not Access";
+    private static final String NOT_FOUND = "Not Found";
+    private static final String BAD_REQUEST = "Bad Request";
 
     protected void sendText(final HttpExchange exchange, final String text) throws IOException {
         byte[] resp = text.getBytes(StandardCharsets.UTF_8);
@@ -28,7 +28,7 @@ public class BaseHttpHandler {
     }
 
     protected void sendBadRequest(final HttpExchange exchange) throws IOException {
-        byte[] resp = badRequest.getBytes(StandardCharsets.UTF_8);
+        byte[] resp = BAD_REQUEST.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
         exchange.sendResponseHeaders(400, resp.length);
         exchange.getResponseBody().write(resp);
@@ -37,21 +37,12 @@ public class BaseHttpHandler {
     }
 
     protected void sendNotFound(final HttpExchange exchange) throws IOException {
-        byte[] resp = notFound.getBytes(StandardCharsets.UTF_8);
+        byte[] resp = NOT_FOUND.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
         exchange.sendResponseHeaders(404, resp.length);
         exchange.getResponseBody().write(resp);
         exchange.close();
         System.out.println("Not Found");
-    }
-
-    protected void sendHasInteraction(final HttpExchange exchange) throws IOException {
-        byte[] resp = notAccess.getBytes(StandardCharsets.UTF_8);
-        exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
-        exchange.sendResponseHeaders(406, resp.length);
-        exchange.getResponseBody().write(resp);
-        exchange.close();
-        System.out.println("Not Access");
     }
 
     protected Integer parseInt(final String s) {
