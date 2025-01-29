@@ -30,21 +30,20 @@ public class EpicHandler extends BaseHttpHandler {
                     if (Pattern.matches("/api/epics/\\d+/subtasks", path)) {
                         String repath = path.replaceFirst("/api/epics/", "").replaceFirst("/subtasks", "");
                         int id = parseInt(repath);
-                        if (taskManager.getEpic(id) != null) {
+                        Epic epic = taskManager.getEpic(id);
+                        if (epic != null) {
                             String response = gson.toJson(taskManager.getSubtasksOfEpic(id));
                             sendText(exchange, response);
                         } else {
                             sendNotFound(exchange);
                         }
-                    } else if ("/api/epics".equals(path)) {
-                        String response = gson.toJson(taskManager.getAllEpics());
-                        sendText(exchange, response);
+                    } else if (Pattern.matches("/api/epics", path)) {
+                        sendText(exchange, gson.toJson(taskManager.getAllEpics()));
                     } else if (Pattern.matches("/api/epics/\\d+", path)) {
-                        String repath = path.replaceFirst("/api/epics/", "");
-                        int id = parseInt(repath);
-                        if (taskManager.getEpic(id) != null) {
-                            String response = gson.toJson(taskManager.getEpic(id));
-                            sendText(exchange, response);
+                        int id = parseInt(path.replaceFirst("/api/epics/", ""));
+                        Epic epic = taskManager.getEpic(id);
+                        if (epic != null) {
+                            sendText(exchange, gson.toJson(epic));
                         } else {
                             sendNotFound(exchange);
                         }
@@ -52,12 +51,13 @@ public class EpicHandler extends BaseHttpHandler {
                         sendNotFound(exchange);
                     }
                     break;
+
                 case "POST":
+                    if (body.isBlank()) {
+                        sendBadRequest(exchange);
+                        return;
+                    }
                     if (Pattern.matches("/api/epics", path)) {
-                        if (body.isBlank()) {
-                            sendBadRequest(exchange);
-                            return;
-                        }
                         try {
                             Epic epic = gson.fromJson(body, Epic.class);
                             if (epic == null) {
@@ -70,22 +70,15 @@ public class EpicHandler extends BaseHttpHandler {
                             sendInternalServerError(exchange, e.getMessage());
                         }
                     } else if (Pattern.matches("/api/epics/\\d+", path)) {
-                        String repath = path.replaceFirst("/api/epics/", "");
-                        int id = parseInt(repath);
+                        int id = parseInt(path.replaceFirst("/api/epics/", ""));
                         if (taskManager.getEpic(id) != null) {
-                            if (body.isBlank()) {
-                                sendBadRequest(exchange);
-                                return;
-                            }
                             try {
                                 Epic epic = gson.fromJson(body, Epic.class);
-                                if (epic.getId() != id) {
+                                if (epic == null || epic.getId() != id) {
                                     sendBadRequest(exchange);
                                     return;
                                 }
-                                if (taskManager.getEpic(id) != null) {
-                                    taskManager.updateEpic(epic);
-                                }
+                                taskManager.updateEpic(epic);
                                 exchange.sendResponseHeaders(200, 0);
                             } catch (Exception e) {
                                 sendBadRequest(exchange);
@@ -99,12 +92,11 @@ public class EpicHandler extends BaseHttpHandler {
                     break;
 
                 case "DELETE":
-                    if ("/api/epics".equals(path)) {
+                    if (Pattern.matches("/api/epics", path)) {
                         taskManager.deleteAllEpics();
                         exchange.sendResponseHeaders(200, 0);
                     } else if (Pattern.matches("/api/epics/\\d+", path)) {
-                        String repath = path.replaceFirst("/api/epics/", "");
-                        int id = parseInt(repath);
+                        int id = parseInt(path.replaceFirst("/api/epics/", ""));
                         if (taskManager.getEpic(id) != null) {
                             taskManager.removeEpic(id);
                             exchange.sendResponseHeaders(200, 0);

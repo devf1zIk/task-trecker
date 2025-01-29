@@ -49,6 +49,10 @@ public class TaskHandler extends BaseHttpHandler {
                         return;
                     }
                 case "POST":
+                    if (body.isBlank()) {
+                        sendBadRequest(exchange);
+                        return;
+                    }
                     if (Pattern.matches("/api/tasks$", path)) {
                         if (body.isBlank()) {
                             sendBadRequest(exchange);

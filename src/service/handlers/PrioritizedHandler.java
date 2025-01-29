@@ -1,9 +1,12 @@
 package service.handlers;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
+import model.Task;
 import service.Managers;
 import service.managers.TaskManager;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PrioritizedHandler extends BaseHttpHandler {
 
@@ -19,22 +22,20 @@ public class PrioritizedHandler extends BaseHttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
         try (exchange) {
             String request = exchange.getRequestMethod();
-            switch (request) {
-                case "GET":
-                    String path = exchange.getRequestURI().getPath();
-                    if (path.equals("/api/prioritized")) {
-                        String response = gson.toJson(taskManager.getPriorityTasks());
-                        sendText(exchange, response);
-                    }
-                    break;
-                default:
-                    System.out.println("Invalid request");
-                    sendBadRequest(exchange);
+            String path = exchange.getRequestURI().getPath();
+            if ("GET".equals(request)) {
+                if ("/api/prioritized".equals(path)) {
+                    List<Task> prioritizedTasks = taskManager.getPriorityTasks();
+                    String response = gson.toJson(prioritizedTasks != null ? prioritizedTasks : new ArrayList<>());
+                    sendText(exchange, response);
+                    return;
+                }
+                sendNotFound(exchange);
+                return;
             }
-
+            exchange.sendResponseHeaders(405, 0);
         } catch (Exception e) {
-            String response = e.getMessage();
-            sendInternalServerError(exchange, response);
+            sendInternalServerError(exchange, e.getMessage());
         }
     }
 }

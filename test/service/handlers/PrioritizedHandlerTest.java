@@ -6,6 +6,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import service.Managers;
 import service.adapters.TaskTypeToken;
 import service.managers.InMemoryTaskManager;
 import service.managers.TaskManager;
@@ -30,7 +31,7 @@ public class PrioritizedHandlerTest {
     public void setUp() throws IOException {
         taskManager = new InMemoryTaskManager();
         taskServer = new HttpTaskServer(taskManager);
-        gson = HttpTaskServer.getGson();
+        gson = Managers.getGson();
         taskServer.start();
     }
 
@@ -59,9 +60,12 @@ public class PrioritizedHandlerTest {
                 .build();
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
         assertEquals(200, response.statusCode(), "Failed to fetch prioritized tasks");
+        Assertions.assertNotNull("Response body is null", response.body());
+
         List<Task> prioritizedTasks = gson.fromJson(response.body(), new TaskTypeToken().getType());
-        Assertions.assertNotNull("Prioritized tasks list should not be null", prioritizedTasks.toString());
+
         assertEquals(2, prioritizedTasks.size(), "Prioritized tasks list size is incorrect");
         assertEquals(task1.getId(), prioritizedTasks.get(0).getId(), "First task in prioritized list is incorrect");
         assertEquals(task2.getId(), prioritizedTasks.get(1).getId(), "Second task in prioritized list is incorrect");

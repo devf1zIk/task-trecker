@@ -7,6 +7,7 @@ import model.enums.Status;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import service.Managers;
 import service.adapters.TaskTypeToken;
 import service.managers.InMemoryTaskManager;
 import service.managers.TaskManager;
@@ -31,7 +32,7 @@ public class HistoryHandlerTest {
     public void setUp() throws IOException {
         taskManager = new InMemoryTaskManager();
         taskServer = new HttpTaskServer(taskManager);
-        gson = HttpTaskServer.getGson();
+        gson = Managers.getGson();
         taskServer.start();
     }
 
@@ -64,11 +65,12 @@ public class HistoryHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(200, response.statusCode(), "Failed to fetch history");
+        assertNotNull(response.body(), "Response body is null");
 
         List<Task> history = gson.fromJson(response.body(), new TaskTypeToken().getType());
+        assertNotNull(history, "History should not be null");
 
         assertEquals(3, history.size(), "Incorrect number of tasks in history");
-
         assertEquals(1, history.get(0).getId(), "First task in history is incorrect");
         assertEquals(2, history.get(1).getId(), "Second task in history is incorrect");
         assertEquals(3, history.get(2).getId(), "Third task in history is incorrect");
@@ -86,6 +88,7 @@ public class HistoryHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(200, response.statusCode(), "Failed to fetch history");
+        assertNotNull(response.body(), "Response body is null");
 
         List<Task> history = gson.fromJson(response.body(), new TaskTypeToken().getType());
         assertNotNull(history, "History should not be null");
@@ -98,7 +101,7 @@ public class HistoryHandlerTest {
         taskManager.addTask(task);
 
         taskManager.getTask(1);
-        taskManager.removeTask(1); // Удаляем задачу
+        taskManager.removeTask(1);
 
         HttpClient client = HttpClient.newHttpClient();
         URI url = URI.create("http://localhost:8080/api/history");
@@ -110,6 +113,7 @@ public class HistoryHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(200, response.statusCode(), "Failed to fetch history");
+        assertNotNull(response.body(), "Response body is null");
 
         List<Task> history = gson.fromJson(response.body(), new TaskTypeToken().getType());
         assertNotNull(history, "History should not be null");
@@ -119,7 +123,7 @@ public class HistoryHandlerTest {
     @Test
     public void testHistoryWithEpicsAndSubtasks() throws IOException, InterruptedException {
         Epic epic = new Epic(1, "Epic 1", "Epic Description", Status.NEW, LocalDateTime.now(), Duration.ofMinutes(30));
-        SubTask subTask = new SubTask(2, "Subtask 1", "Subtask Description", Status.IN_PROGRESS, LocalDateTime.now().plusMinutes(10), Duration.ofMinutes(10), 1);
+        SubTask subTask = new SubTask(2, "Subtask 1", "Subtask Description", Status.IN_PROGRESS, LocalDateTime.now().plusMinutes(10), Duration.ofMinutes(10), epic.getId());
 
         taskManager.addEpic(epic);
         taskManager.addSubtask(subTask);
@@ -137,6 +141,7 @@ public class HistoryHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(200, response.statusCode(), "Failed to fetch history");
+        assertNotNull(response.body(), "Response body is null");
 
         List<Task> history = gson.fromJson(response.body(), new TaskTypeToken().getType());
         assertNotNull(history, "History should not be null");
@@ -145,5 +150,28 @@ public class HistoryHandlerTest {
         assertEquals(2, history.get(1).getId(), "Second item in history is not the subtask");
     }
 
+    @Test
+    public void testHistoryClearedAfterDeletingAllTasks() throws IOException, InterruptedException {
+        Task task = new Task(1, "Task 1", "Description 1", Status.NEW, LocalDateTime.now(), Duration.ofMinutes(15));
+        taskManager.addTask(task);
+        taskManager.getTask(1);
 
+        taskManager.deleteAllTasks();
+
+        HttpClient client = HttpClient.newHttpClient();
+        URI url = URI.create("http://localhost:8080/api/history");
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .GET()
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(200, response.statusCode(), "Failed to fetch history");
+        assertNotNull(response.body(), "Response body is null");
+
+        List<Task> history = gson.fromJson(response.body(), new TaskTypeToken().getType());
+        assertNotNull(history, "History should not be null");
+        assertTrue(history.isEmpty(), "History should be empty after deleting all tasks");
+    }
 }

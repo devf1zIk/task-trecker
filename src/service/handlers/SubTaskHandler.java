@@ -49,6 +49,10 @@ public class SubTaskHandler extends BaseHttpHandler {
                         return;
                     }
                 case "POST":
+                    if (body.isBlank()) {
+                        sendBadRequest(exchange);
+                        return;
+                    }
                     if (Pattern.matches("/api/subtasks", path)) {
                         SubTask subTask = gson.fromJson(body, SubTask.class);
                         taskManager.addSubtask(subTask);
@@ -75,24 +79,19 @@ public class SubTaskHandler extends BaseHttpHandler {
                         return;
                     }
                 case "DELETE":
-                    if (Pattern.matches("/api/subtasks/\\d+", path)) {
-                        String repath = path.replaceFirst("/api/subtasks/", "");
-                        int id = parseInt(repath);
-                        if (taskManager.getSubtask(id) != null) {
-                            if (body.isBlank()) {
-                                sendBadRequest(exchange);
-                                return;
-                            }
+                    if (Pattern.matches("/api/subtasks", path)) {
+                        taskManager.deleteAllSubtasks();
+                        exchange.sendResponseHeaders(200, 0);
+                    } else if (Pattern.matches("/api/subtasks/\\d+", path)) {
+                        int id = parseInt(path.replaceFirst("/api/subtasks/", ""));
+                        SubTask subTask = taskManager.getSubtask(id);
+                        if (subTask != null) {
                             taskManager.removeSubtask(id);
-                            exchange.sendResponseHeaders(200,0);
-                            return;
-                        } else {
-                            sendNotFound(exchange);
+                            exchange.sendResponseHeaders(200, 0);
                             return;
                         }
                     } else {
                         sendNotFound(exchange);
-                        return;
                     }
                 default:
                     System.out.println("Сервер с методами ошибка, такой метод нету" + request);

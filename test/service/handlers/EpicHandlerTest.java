@@ -6,6 +6,7 @@ import model.enums.Status;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import service.Managers;
 import service.adapters.EpicTypeToken;
 import service.adapters.SubTaskTypeToken;
 import service.managers.InMemoryTaskManager;
@@ -31,7 +32,7 @@ public class EpicHandlerTest {
     public void setUp() throws IOException {
         taskManager = new InMemoryTaskManager();
         taskServer = new HttpTaskServer(taskManager);
-        gson = HttpTaskServer.getGson();
+        gson = Managers.getGson();
         taskServer.start();
     }
 
@@ -42,7 +43,7 @@ public class EpicHandlerTest {
 
     @Test
     public void testAddEpic() throws IOException, InterruptedException {
-        LocalDateTime startTime = LocalDateTime.of(2021,3,4,5,5,6);
+        LocalDateTime startTime = LocalDateTime.of(2021, 3, 4, 5, 5, 6);
         Duration duration = Duration.ofMinutes(10);
         LocalDateTime endTime = startTime.plus(duration);
         Epic epic = new Epic(1, "Epic 1", "Test epic description", Status.NEW, startTime, duration, endTime);
@@ -73,7 +74,7 @@ public class EpicHandlerTest {
         assertEquals(duration, returnedEpic.getDuration(), "Epic duration is incorrect");
         assertEquals(endTime, returnedEpic.getEndTime(), "Epic end time is incorrect");
     }
-
+    
     @Test
     public void testGetAllEpics() throws IOException, InterruptedException {
         LocalDateTime startTime = LocalDateTime.now();
@@ -191,6 +192,59 @@ public class EpicHandlerTest {
     }
 
     @Test
+    public void testUpdateEpic() throws IOException, InterruptedException {
+        LocalDateTime startTime = LocalDateTime.of(2015, 5, 3, 19, 7);
+        Duration duration = Duration.ofMinutes(30);
+        LocalDateTime endTime = startTime.plus(duration);
+
+        Epic epic = new Epic(1, "Initial Epic", "Initial description", Status.NEW, startTime, duration, endTime);
+        taskManager.addEpic(epic);
+
+        Epic updatedEpic = new Epic(1, "Updated Epic", "Updated description", Status.IN_PROGRESS, startTime, duration, endTime);
+        String updatedEpicJson = gson.toJson(updatedEpic);
+
+        HttpClient client = HttpClient.newHttpClient();
+        URI url = URI.create("http://localhost:8080/api/epics/1");
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .POST(HttpRequest.BodyPublishers.ofString(updatedEpicJson))
+                .header("Content-Type", "application/json")
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, response.statusCode(), "Epic update request failed");
+
+        Epic retrievedEpic = taskManager.getEpic(1);
+        assertNotNull(retrievedEpic, "Epic was not found after update");
+        assertEquals("Updated Epic", retrievedEpic.getName(), "Epic name was not updated");
+        assertEquals("Updated description", retrievedEpic.getDescription(), "Epic description was not updated");
+    }
+
+    @Test
+    public void testUpdateEpicWithWrongId() throws IOException, InterruptedException {
+        LocalDateTime startTime = LocalDateTime.of(2014,2,3,4,5);
+        Duration duration = Duration.ofMinutes(4);
+        LocalDateTime endTime = startTime.plus(duration);
+
+        Epic epic = new Epic(1, "Initial Epic", "Initial description", Status.NEW, startTime, duration, endTime);
+        taskManager.addEpic(epic);
+
+        Epic updatedEpic = new Epic(2, "Updated Epic", "Updated description", Status.IN_PROGRESS, startTime, duration, endTime);
+        String updatedEpicJson = gson.toJson(updatedEpic);
+
+        HttpClient client = HttpClient.newHttpClient();
+        URI url = URI.create("http://localhost:8080/api/epics/1");
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .POST(HttpRequest.BodyPublishers.ofString(updatedEpicJson))
+                .header("Content-Type", "application/json")
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        assertEquals(400, response.statusCode(), "Expected 400 Bad Request for mismatched ID");
+    }
+
+    @Test
     public void testGetSubtasksOfEpic() throws IOException, InterruptedException {
         Epic epic = new Epic(9, "Epic 9", "Description 9", Status.NEW, LocalDateTime.now(), Duration.ofMinutes(10));
         taskManager.addEpic(epic);
@@ -213,5 +267,18 @@ public class EpicHandlerTest {
         List<SubTask> subtasks = gson.fromJson(response.body(), new SubTaskTypeToken().getType());
         assertNotNull(subtasks, "Subtasks list is null");
         assertEquals(2, subtasks.size(), "Incorrect number of subtasks returned");
+    }
+
+    @Test
+    public void testDeleteNonExistentEpic() throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newHttpClient();
+        URI url = URI.create("http://localhost:8080/api/epics/999");
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .DELETE()
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        assertEquals(404, response.statusCode(), "Expected 404 Not Found for non-existent epic deletion");
     }
 }

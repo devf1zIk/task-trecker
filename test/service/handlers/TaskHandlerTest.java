@@ -6,6 +6,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import service.Managers;
 import service.adapters.TaskTypeToken;
 import service.managers.InMemoryTaskManager;
 import service.managers.TaskManager;
@@ -29,7 +30,7 @@ public class TaskHandlerTest {
     public void setUp() throws IOException {
         taskManager = new InMemoryTaskManager();
         taskServer = new HttpTaskServer(taskManager);
-        gson = HttpTaskServer.getGson();
+        gson = Managers.getGson();
         taskServer.start();
     }
 
