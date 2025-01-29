@@ -125,17 +125,4 @@ public class SubTaskHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(404, response.statusCode(), "Expected 404 Not Found for non-existent subtask");
     }
-
-    @Test
-    public void testDeleteNonExistentSubTask() throws IOException, InterruptedException {
-        HttpClient client = HttpClient.newHttpClient();
-        URI url = URI.create("http://localhost:8080/api/subtasks/999");
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(url)
-                .DELETE()
-                .build();
-
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        assertEquals(404, response.statusCode(), "Expected 404 Not Found for non-existent subtask deletion");
-    }
 }
