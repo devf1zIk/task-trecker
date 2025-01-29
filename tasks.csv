@@ -1,4 +1,1 @@
-id,type,name,status,description,epic
-1,TASK,Task1,NEW,Description task1,
-2,EPIC,Epic2,NEW,Description epic2,
-3,SUBTASK,Sub Task2,IN_PROGRESS,Description sub task3,2
+id,type,name,description,status,startTime,duration,endTime,epicId
